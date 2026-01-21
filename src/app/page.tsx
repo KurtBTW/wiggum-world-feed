@@ -6,6 +6,7 @@ import { RefreshCw, Loader2, Globe } from 'lucide-react';
 import { TileCard } from '@/components/TileCard';
 import { ItemDrawer } from '@/components/ItemDrawer';
 import { ChatTerminal } from '@/components/ChatTerminal';
+import { LatestFeed } from '@/components/LatestFeed';
 import type { TileSnapshot, TileItem, Category } from '@/types';
 
 const CATEGORIES: Category[] = ['technology', 'crypto', 'ai', 'business', 'market_movements'];
@@ -110,7 +111,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0a0a0a]/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-[1800px] mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#22c55e] flex items-center justify-center">
@@ -121,7 +122,7 @@ export default function Home() {
                   Wiggum World Feed
                 </h1>
                 <p className="text-[11px] text-zinc-500">
-                  Calm, optimistic news · Updated hourly
+                  Calm, optimistic news
                 </p>
               </div>
             </div>
@@ -149,43 +150,58 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 pb-80">
-        {/* Hero Section */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            World Changes at a Glance
-          </h2>
-          <p className="text-sm text-zinc-500 max-w-md mx-auto">
-            Curated news filtered for optimism and forward progress. No doom, no hype.
-          </p>
-        </div>
-
-        {/* Tile Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-          {CATEGORIES.map((category) => (
-            <TileCard
-              key={category}
-              category={category}
-              snapshot={tiles[category]}
-              onItemClick={handleItemClick}
-            />
-          ))}
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-8 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01]">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#fbbf24]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-lg">?</span>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-1">How it works</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Every hour, we fetch news from trusted sources, score them for optimism and forward-progress, 
-                run a 20-pass refinement loop to filter sensationalism, and present only the most constructive updates.
-                Click any item to read more or ask AI for deeper insights.
+      {/* Main Content - Two Column Layout */}
+      <main className="max-w-[1800px] mx-auto px-4 py-6">
+        <div className="flex gap-6">
+          {/* Left Side - Category Tiles */}
+          <div className="flex-1 min-w-0">
+            {/* Hero Section */}
+            <div className="text-center mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                World Changes at a Glance
+              </h2>
+              <p className="text-sm text-zinc-500 max-w-md mx-auto">
+                Curated news filtered for optimism and forward progress. No doom, no hype.
               </p>
+            </div>
+
+            {/* Tile Grid - 5 columns on XL, 3 on LG, 2 on MD, 1 on mobile */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+              {CATEGORIES.map((category) => (
+                <TileCard
+                  key={category}
+                  category={category}
+                  snapshot={tiles[category]}
+                  onItemClick={handleItemClick}
+                />
+              ))}
+            </div>
+
+            {/* Info Section */}
+            <div className="mt-6 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01]">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#fbbf24]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-lg">?</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white mb-1">How it works</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed">
+                    Every hour, we fetch news from trusted sources, score them for optimism and forward-progress, 
+                    run a 20-pass refinement loop to filter sensationalism, and present only the most constructive updates.
+                    Click any item to read more or ask AI for deeper insights.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Latest Feed (Sticky Sidebar) */}
+          <div className="hidden xl:block w-[380px] flex-shrink-0">
+            <div className="sticky top-24 h-[calc(100vh-120px)]">
+              <LatestFeed 
+                tiles={tiles} 
+                onItemClick={handleItemClick}
+              />
             </div>
           </div>
         </div>
@@ -201,7 +217,7 @@ export default function Home() {
         />
       )}
 
-      {/* Chat Terminal */}
+      {/* Floating Chat Terminal */}
       <ChatTerminal
         sessionId={sessionId}
         boundItem={boundItem}

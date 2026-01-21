@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Trash2, X, ChevronUp, ChevronDown, MessageSquare } from 'lucide-react';
+import { Send, Loader2, Trash2, X, ChevronDown, ChevronUp, MessageSquare, Sparkles } from 'lucide-react';
 import type { ChatMessage, TileItem } from '@/types';
 
 interface ChatTerminalProps {
@@ -87,16 +87,22 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
     }
   }
 
+  // Minimized floating button
   if (isMinimized) {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed right-4 bottom-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg border border-white/[0.08] bg-[#0F0F12] hover:bg-[#1A1A1D] transition-all shadow-lg group"
+        className="fixed right-6 bottom-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl border border-white/[0.1] bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 transition-all shadow-2xl shadow-black/50 group backdrop-blur-sm"
       >
-        <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-[#fbbf24] transition-colors" />
-        <span className="text-sm text-zinc-300">Ask AI</span>
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#22c55e] flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-black" />
+        </div>
+        <div className="text-left">
+          <span className="text-sm font-medium text-white block">GPT-5.2</span>
+          <span className="text-[10px] text-zinc-500">Ask anything</span>
+        </div>
         {messages.length > 0 && (
-          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#22c55e]/20 text-[#22c55e] text-[10px] font-medium">
+          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#22c55e] text-black text-[10px] font-bold">
             {messages.length}
           </span>
         )}
@@ -104,32 +110,23 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
     );
   }
 
+  // Expanded floating panel
   return (
     <div 
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.08] bg-[#0a0a0a] transition-all duration-300 ${
-        isExpanded ? 'h-[60vh]' : 'h-72'
+      className={`fixed right-6 bottom-6 z-50 flex flex-col border border-white/[0.1] bg-[#0a0a0a]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 transition-all duration-300 ${
+        isExpanded ? 'w-[420px] h-[70vh]' : 'w-[380px] h-[450px]'
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#0F0F12]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08] rounded-t-2xl bg-gradient-to-r from-[#fbbf24]/5 to-[#22c55e]/5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-[#fbbf24]" />
-            <span className="text-sm font-medium text-white">Chat</span>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#22c55e] flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-black" />
           </div>
-          {boundItem && (
-            <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-[#22c55e]/10 border border-[#22c55e]/20">
-              <span className="text-[11px] text-[#22c55e] truncate max-w-[180px]">
-                {boundItem.calmHeadline}
-              </span>
-              <button 
-                onClick={onClearBoundItem} 
-                className="hover:text-white transition-colors"
-              >
-                <X className="w-3 h-3 text-[#22c55e]/60" />
-              </button>
-            </div>
-          )}
+          <div>
+            <span className="text-sm font-semibold text-white">GPT-5.2</span>
+            <span className="text-[10px] text-zinc-500 block">Powered by OpenAI</span>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -137,7 +134,7 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
             className="p-2 hover:bg-white/[0.05] rounded-lg transition-colors"
             title="Clear history"
           >
-            <Trash2 className="w-4 h-4 text-zinc-600 hover:text-zinc-400" />
+            <Trash2 className="w-4 h-4 text-zinc-500 hover:text-zinc-300" />
           </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -145,9 +142,9 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
             title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-zinc-600" />
+              <ChevronDown className="w-4 h-4 text-zinc-500" />
             ) : (
-              <ChevronUp className="w-4 h-4 text-zinc-600" />
+              <ChevronUp className="w-4 h-4 text-zinc-500" />
             )}
           </button>
           <button
@@ -155,23 +152,42 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
             className="p-2 hover:bg-white/[0.05] rounded-lg transition-colors"
             title="Minimize"
           >
-            <X className="w-4 h-4 text-zinc-600" />
+            <X className="w-4 h-4 text-zinc-500" />
           </button>
         </div>
       </div>
 
+      {/* Bound Item Badge */}
+      {boundItem && (
+        <div className="px-4 py-2 border-b border-white/[0.06] bg-[#22c55e]/5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Context:</span>
+            <span className="text-[11px] text-[#22c55e] truncate flex-1">
+              {boundItem.calmHeadline}
+            </span>
+            <button 
+              onClick={onClearBoundItem} 
+              className="hover:text-white transition-colors"
+            >
+              <X className="w-3 h-3 text-[#22c55e]/60" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div 
-        className="overflow-y-auto p-4 space-y-3" 
-        style={{ height: 'calc(100% - 108px)' }}
+        className="flex-1 overflow-y-auto p-4 space-y-3"
       >
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-12 h-12 mb-3 rounded-full bg-white/[0.03] flex items-center justify-center">
-              <MessageSquare className="w-6 h-6 text-zinc-700" />
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="w-14 h-14 mb-4 rounded-2xl bg-gradient-to-br from-[#fbbf24]/10 to-[#22c55e]/10 flex items-center justify-center">
+              <MessageSquare className="w-7 h-7 text-zinc-600" />
             </div>
-            <p className="text-sm text-zinc-500">Ask me anything about the news</p>
-            <p className="text-xs text-zinc-600 mt-1">Click an item to add context</p>
+            <p className="text-sm text-zinc-400 font-medium mb-1">Ask me anything</p>
+            <p className="text-xs text-zinc-600">
+              Get AI insights about news, trends, or click an article to ask about it
+            </p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -180,10 +196,10 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] px-3.5 py-2.5 rounded-xl text-sm ${
+                className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm ${
                   msg.role === 'user'
-                    ? 'bg-gradient-to-r from-[#fbbf24]/20 to-[#22c55e]/20 border border-[#fbbf24]/20 text-white'
-                    : 'bg-white/[0.03] border border-white/[0.06] text-zinc-200'
+                    ? 'bg-gradient-to-r from-[#fbbf24] to-[#22c55e] text-black font-medium'
+                    : 'bg-white/[0.05] border border-white/[0.08] text-zinc-200'
                 }`}
               >
                 <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
@@ -193,8 +209,11 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
         )}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-              <Loader2 className="w-4 h-4 animate-spin text-[#fbbf24]" />
+            <div className="px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-2xl">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-[#fbbf24]" />
+                <span className="text-xs text-zinc-500">Thinking...</span>
+              </div>
             </div>
           </div>
         )}
@@ -202,20 +221,20 @@ export function ChatTerminal({ sessionId, boundItem, onClearBoundItem }: ChatTer
       </div>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="p-3 border-t border-white/[0.06]">
+      <form onSubmit={sendMessage} className="p-4 border-t border-white/[0.08]">
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={boundItem ? `Ask about this article...` : 'Ask a question...'}
-            className="flex-1 px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#fbbf24]/30 transition-colors"
+            placeholder={boundItem ? `Ask about this article...` : 'Ask anything...'}
+            className="flex-1 px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#fbbf24]/40 focus:bg-white/[0.08] transition-all"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#fbbf24] to-[#22c55e] text-black font-medium text-sm transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#22c55e] text-black font-semibold text-sm transition-all hover:opacity-90 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Send className="w-4 h-4" />
           </button>
