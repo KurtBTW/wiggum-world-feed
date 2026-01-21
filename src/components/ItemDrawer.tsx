@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { X, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
+import { X, ExternalLink, Sparkles, Loader2, ArrowUpRight } from 'lucide-react';
 import type { TileItem } from '@/types';
 
 interface ItemDrawerProps {
@@ -19,45 +18,60 @@ export function ItemDrawer({ item, onClose, onExplain, isExplaining }: ItemDrawe
   const nyTime = toZonedTime(new Date(item.publishedAt), 'America/New_York');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl max-h-[80vh] bg-gray-900 rounded-xl border border-gray-700 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative w-full max-w-xl max-h-[85vh] overflow-hidden rounded-xl border border-white/[0.08] bg-[#0F0F12] shadow-2xl">
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-gray-700">
+        <div className="flex items-start justify-between p-5 border-b border-white/[0.06]">
           <div className="flex-1 pr-4">
-            <h2 className="text-lg font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold text-white leading-tight mb-2">
               {item.calmHeadline}
             </h2>
-            <p className="text-sm text-gray-400">
-              {item.sourceName} • {format(nyTime, 'MMMM d, yyyy h:mm a')} ET
-            </p>
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <span className="font-medium text-zinc-400">{item.sourceName}</span>
+              <span>·</span>
+              <span>{format(nyTime, 'MMM d, yyyy · h:mm a')} ET</span>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 -m-2 hover:bg-white/[0.05] rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-zinc-500" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[50vh]">
+        <div className="p-5 overflow-y-auto max-h-[50vh] space-y-4">
           {/* Original headline */}
-          <div className="mb-4 p-3 bg-gray-800/50 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Original Headline</p>
-            <p className="text-sm text-gray-300">{item.originalTitle}</p>
+          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1.5 font-medium">
+              Original Headline
+            </p>
+            <p className="text-sm text-zinc-300">{item.originalTitle}</p>
           </div>
 
           {/* Calm summary */}
-          <div className="mb-4">
-            <p className="text-xs text-gray-500 mb-1">Summary</p>
-            <p className="text-gray-200">{item.calmSummary}</p>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1.5 font-medium">
+              Summary
+            </p>
+            <p className="text-sm text-zinc-200 leading-relaxed">{item.calmSummary}</p>
           </div>
 
           {/* Excerpt if available */}
           {item.excerpt && (
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-1">Excerpt</p>
-              <p className="text-sm text-gray-300">{item.excerpt}</p>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1.5 font-medium">
+                Excerpt
+              </p>
+              <p className="text-sm text-zinc-400 leading-relaxed">{item.excerpt}</p>
             </div>
           )}
 
@@ -66,29 +80,29 @@ export function ItemDrawer({ item, onClose, onExplain, isExplaining }: ItemDrawe
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-[#fbbf24] hover:text-[#22c55e] transition-colors group"
           >
-            <ExternalLink className="w-4 h-4" />
-            Read full article at {item.sourceName}
+            <span>Read full article</span>
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </a>
         </div>
 
         {/* Actions */}
-        <div className="p-4 border-t border-gray-700 bg-gray-800/50">
+        <div className="p-5 border-t border-white/[0.06] bg-white/[0.01]">
           <button
             onClick={() => onExplain(item.id)}
             disabled={isExplaining}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 rounded-lg font-medium transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed gradient-border bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 text-white"
           >
             {isExplaining ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Analyzing...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Analyzing...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5" />
-                Explain with GPT-5.2
+                <Sparkles className="w-4 h-4 text-[#fbbf24]" />
+                <span>Explain with GPT-5.2</span>
               </>
             )}
           </button>
