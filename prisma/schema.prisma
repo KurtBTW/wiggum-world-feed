@@ -1,0 +1,153 @@
+// Wiggum World Feed - Database Schema
+// SQLite for dev, Postgres-ready
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Ingested items from RSS feeds and APIs
+model IngestedItem {
+  id            String   @id @default(uuid())
+  title         String
+  originalTitle String
+  url           String   @unique
+  canonicalUrl  String?
+  source        String
+  sourceName    String
+  category      String
+  publishedAt   DateTime
+  fetchedAt     DateTime @default(now())
+  excerpt       String?
+  snippet       String?
+  
+  // Scoring fields
+  optimismScore        Float @default(0)
+  sensationalismScore  Float @default(0)
+  forwardProgressScore Float @default(0)
+  freshnessScore       Float @default(0)
+  credibilityScore     Float @default(0)
+  topicFitScore        Float @default(0)
+  totalScore           Float @default(0)
+  
+  // Processing status
+  processed       Boolean @default(false)
+  selectedForTile Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  tileItems    TileItem[]
+  chatMessages ChatMessage[]
+  
+  @@index([category])
+  @@index([publishedAt])
+  @@index([totalScore])
+}
+
+// Tile snapshots - persisted for "no new keep tile" behavior
+model TileSnapshot {
+  id        String   @id @default(uuid())
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Snapshot metrics
+  avgSensationalism  Float @default(0)
+  avgOptimism        Float @default(0)
+  forwardProgressPct Float @default(0)
+  itemCount          Int   @default(0)
+  sourceDiversity    Int   @default(0)
+  
+  // Wiggum loop metadata
+  wiggumPasses    Int     @default(0)
+  acceptedAtPass  Int?
+  finalThresholds String? // JSON string of final thresholds used
+  
+  // Items in this snapshot
+  items TileItem[]
+  
+  @@index([category])
+  @@index([createdAt])
+}
+
+// Items belonging to a tile snapshot
+model TileItem {
+  id             String   @id @default(uuid())
+  snapshotId     String
+  ingestedItemId String
+  position       Int      @default(0)
+  
+  // Calm summary (rewritten)
+  calmHeadline String
+  calmSummary  String
+  
+  createdAt DateTime @default(now())
+  
+  snapshot     TileSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  ingestedItem IngestedItem @relation(fields: [ingestedItemId], references: [id])
+  
+  @@index([snapshotId])
+}
+
+// Market data for Market Movements tile
+model MarketData {
+  id          String   @id @default(uuid())
+  asset       String   // SP500, GOLD, BTC
+  date        DateTime
+  openPrice   Float
+  closePrice  Float
+  dailyChange Float    // percentage
+  
+  // Possible reasons (JSON array)
+  possibleReasons String?
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([asset, date])
+  @@index([asset])
+  @@index([date])
+}
+
+// Chat history for the terminal
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      String   // user, assistant, system
+  content   String
+  
+  // Context binding
+  boundItemId String?
+  boundItem   IngestedItem? @relation(fields: [boundItemId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+// Wiggum loop iteration logs for debugging
+model WiggumLoopLog {
+  id         String  @id @default(uuid())
+  category   String
+  passNumber Int
+  
+  // Input state
+  inputMetrics    String // JSON
+  inputThresholds String // JSON
+  
+  // Output state
+  accepted       Boolean
+  adjustments    String? // JSON of adjustments made
+  failureReasons String? // JSON array of why not accepted
+  
+  createdAt DateTime @default(now())
+  
+  @@index([category])
+  @@index([createdAt])
+}

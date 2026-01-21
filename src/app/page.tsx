@@ -1,65 +1,176 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { RefreshCw, Loader2 } from 'lucide-react';
+import { TileCard } from '@/components/TileCard';
+import { ItemDrawer } from '@/components/ItemDrawer';
+import { ChatTerminal } from '@/components/ChatTerminal';
+import type { TileSnapshot, TileItem, Category } from '@/types';
+
+const CATEGORIES: Category[] = ['technology', 'crypto', 'ai', 'business', 'market_movements'];
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+  const [tiles, setTiles] = useState<Record<Category, TileSnapshot | null>>({} as Record<Category, TileSnapshot | null>);
+  const [selectedItem, setSelectedItem] = useState<TileItem | null>(null);
+  const [boundItem, setBoundItem] = useState<TileItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [sessionId] = useState(() => 
+    typeof window !== 'undefined' 
+      ? localStorage.getItem('chatSessionId') || uuidv4()
+      : uuidv4()
+  );
+
+  // Store session ID
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chatSessionId', sessionId);
+    }
+  }, [sessionId]);
+
+  // Fetch tiles on mount and set up hourly refresh
+  useEffect(() => {
+    fetchTiles();
+    const interval = setInterval(fetchTiles, 60 * 60 * 1000); // Hourly
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchTiles = useCallback(async () => {
+    try {
+      const res = await fetch('/api/tiles');
+      const data = await res.json();
+      if (data.tiles) {
+        setTiles(data.tiles);
+        setLastUpdated(new Date(data.lastUpdated));
+      }
+    } catch (error) {
+      console.error('Failed to fetch tiles:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch('/api/tiles', { method: 'POST' });
+      const data = await res.json();
+      if (data.tiles) {
+        setTiles(data.tiles);
+        setLastUpdated(new Date(data.lastUpdated));
+      }
+    } catch (error) {
+      console.error('Failed to refresh tiles:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleItemClick = (item: TileItem) => {
+    setSelectedItem(item);
+    setBoundItem(item); // Also bind to chat context
+  };
+
+  const handleExplain = async (itemId: string) => {
+    setIsExplaining(true);
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          message: '',
+          boundItemId: itemId,
+          action: 'explain'
+        })
+      });
+      setSelectedItem(null); // Close drawer after explain
+    } catch (error) {
+      console.error('Failed to explain item:', error);
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-400">Loading Wiggum World Feed...</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-950 pb-64">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">
+              🌍 Wiggum World Feed
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">
+              Calm, optimistic world changes • Refreshes hourly
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {lastUpdated && (
+              <span className="text-xs text-gray-500">
+                Last updated: {lastUpdated.toLocaleTimeString('en-US', { 
+                  timeZone: 'America/New_York',
+                  hour: 'numeric',
+                  minute: '2-digit'
+                })} ET
+              </span>
+            )}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800 rounded-lg text-sm font-medium transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Tile Grid */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {CATEGORIES.map((category) => (
+            <TileCard
+              key={category}
+              category={category}
+              snapshot={tiles[category]}
+              onItemClick={handleItemClick}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
       </main>
+
+      {/* Item Drawer */}
+      {selectedItem && (
+        <ItemDrawer
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onExplain={handleExplain}
+          isExplaining={isExplaining}
+        />
+      )}
+
+      {/* Chat Terminal */}
+      <ChatTerminal
+        sessionId={sessionId}
+        boundItem={boundItem}
+        onClearBoundItem={() => setBoundItem(null)}
+      />
     </div>
   );
 }

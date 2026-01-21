@@ -1,0 +1,88 @@
+{
+  "global": {
+    "maxSensationalism": 0.3,
+    "minOptimism": 0.4,
+    "minForwardProgressPct": 0.5,
+    "minCredibility": 0.3,
+    "ingestionWindowHours": 24,
+    "deduplicationSimilarityThreshold": 0.85
+  },
+  "categories": {
+    "technology": {
+      "targetItemCount": 5,
+      "minItemCount": 3,
+      "maxItemCount": 8,
+      "maxSensationalism": 0.25,
+      "minOptimism": 0.5,
+      "minForwardProgressPct": 0.6,
+      "maxSameSourceItems": 2
+    },
+    "crypto": {
+      "targetItemCount": 5,
+      "minItemCount": 3,
+      "maxItemCount": 8,
+      "maxSensationalism": 0.35,
+      "minOptimism": 0.4,
+      "minForwardProgressPct": 0.5,
+      "maxSameSourceItems": 2
+    },
+    "ai": {
+      "targetItemCount": 5,
+      "minItemCount": 3,
+      "maxItemCount": 8,
+      "maxSensationalism": 0.2,
+      "minOptimism": 0.5,
+      "minForwardProgressPct": 0.7,
+      "maxSameSourceItems": 2
+    },
+    "business": {
+      "targetItemCount": 5,
+      "minItemCount": 3,
+      "maxItemCount": 8,
+      "maxSensationalism": 0.3,
+      "minOptimism": 0.3,
+      "minForwardProgressPct": 0.4,
+      "maxSameSourceItems": 2,
+      "requireCompanyMatch": true
+    },
+    "market_movements": {
+      "targetItemCount": 3,
+      "minItemCount": 1,
+      "maxItemCount": 3,
+      "maxSensationalism": 0.4,
+      "minOptimism": 0.2,
+      "minForwardProgressPct": 0.2,
+      "thresholdPercent": 5
+    }
+  },
+  "scoring": {
+    "weights": {
+      "optimism": 0.25,
+      "forwardProgress": 0.25,
+      "credibility": 0.2,
+      "freshness": 0.15,
+      "topicFit": 0.15
+    },
+    "penalties": {
+      "sensationalism": 0.4,
+      "socialOnly": 0.2,
+      "duplicateSource": 0.1
+    }
+  },
+  "wiggumLoop": {
+    "maxPasses": 20,
+    "adjustmentStep": 0.05,
+    "earlyStopThreshold": 0.8
+  },
+  "calmSummary": {
+    "maxHeadlineLength": 100,
+    "maxSummaryLength": 200,
+    "bannedWords": [
+      "BREAKING", "URGENT", "SHOCKING", "DEVASTATING", "CATASTROPHIC",
+      "EXPLOSIVE", "BOMBSHELL", "SLAM", "DESTROY", "ANNIHILATE",
+      "CHAOS", "CRISIS", "PANIC", "DOOM", "DISASTER", "NIGHTMARE",
+      "INSANE", "CRAZY", "UNBELIEVABLE", "MASSIVE", "HUGE"
+    ],
+    "toneGuidelines": "calm, factual, forward-looking, solution-oriented"
+  }
+}
