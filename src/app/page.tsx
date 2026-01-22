@@ -29,18 +29,15 @@ const TICKER_ASSETS = [
   { symbol: 'COPPER', name: 'Copper', yahooSymbol: 'HG=F' },
 ];
 
-// HyperEVM Protocols - URLs to be provided
+// HyperEVM Protocols - Featured
 const HYPEREVM_PROTOCOLS = [
-  { name: 'HypurrFi', url: '', description: 'Trade & Earn' },
-  { name: 'HyperSwap', url: '', description: 'DEX' },
-  { name: 'PRJX', url: '', description: 'Launchpad' },
-  { name: 'Kinetiq', url: '', description: 'Perps' },
-  { name: 'HyperLend', url: '', description: 'Lending' },
-  { name: 'Felix', url: '', description: 'Stablecoin' },
-  { name: 'Liminal', url: '', description: 'Yield' },
-  { name: 'HyperWave', url: '', description: 'Analytics' },
-  { name: 'HyperUnit', url: '', description: 'Index' },
-  { name: 'Hyperliquid', url: '', description: 'L1 DEX' },
+  { name: 'Hyperliquid', url: 'https://app.hyperliquid.xyz/trade', description: 'Perpetuals Exchange' },
+  { name: 'HypurrFi', url: 'https://app.hypurr.fi/', description: 'Lending Platform' },
+  { name: 'HyperSwap', url: 'https://app.hyperswap.exchange/#/swap', description: 'Exchange' },
+  { name: 'PRJX', url: 'https://www.prjx.com/', description: 'Exchange' },
+  { name: 'Kinetiq', url: 'https://kinetiq.xyz/', description: 'LST' },
+  { name: 'Liminal', url: 'https://liminal.money/app/tokenized', description: 'Tokenized Strategies' },
+  { name: 'HyperWave', url: 'https://app.hyperwavefi.xyz/assets/hwhlp', description: 'Tokenized Strategies' },
 ];
 
 // Keywords that indicate major news for HypurrFi users
@@ -366,11 +363,11 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-[1400px] mx-auto px-4 py-6">
         <div className="flex gap-6">
-          {/* Left Sidebar - HyperEVM Protocols */}
+          {/* Left Sidebar - Featured Protocols */}
           <aside className="w-48 flex-shrink-0 hidden xl:block">
             <div className="sticky top-4">
               <div className="border-b-2 border-[#50e2c3] pb-2 mb-4">
-                <h3 className="text-sm font-bold text-white">HyperEVM</h3>
+                <h3 className="text-sm font-bold text-white">Featured</h3>
               </div>
               <div className="space-y-1">
                 {HYPEREVM_PROTOCOLS.map((protocol) => (
