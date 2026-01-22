@@ -364,33 +364,25 @@ export default function Home() {
       <main className="max-w-[1400px] mx-auto px-4 py-6">
         <div className="flex gap-6">
           {/* Left Sidebar - Featured Protocols */}
-          <aside className="w-48 flex-shrink-0 hidden xl:block">
+          <aside className="w-52 flex-shrink-0 hidden xl:block">
             <div className="sticky top-4">
               <div className="border-b-2 border-[#50e2c3] pb-2 mb-4">
                 <h3 className="text-sm font-bold text-white">Featured</h3>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {HYPEREVM_PROTOCOLS.map((protocol) => (
-                  protocol.url ? (
-                    <a
-                      key={protocol.name}
-                      href={protocol.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between py-2 px-2 -mx-2 rounded text-sm text-zinc-400 hover:text-[#50e2c3] hover:bg-white/[0.03] transition-all group"
-                    >
-                      <span className="font-medium">{protocol.name}</span>
-                      <span className="text-xs text-zinc-600 group-hover:text-zinc-500">{protocol.description}</span>
-                    </a>
-                  ) : (
-                    <div
-                      key={protocol.name}
-                      className="flex items-center justify-between py-2 px-2 -mx-2 rounded text-sm text-zinc-400"
-                    >
-                      <span className="font-medium">{protocol.name}</span>
-                      <span className="text-xs text-zinc-600">{protocol.description}</span>
+                  <a
+                    key={protocol.name}
+                    href={protocol.url || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block py-2 px-3 -mx-1 rounded text-sm hover:bg-white/[0.03] transition-all group"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-zinc-300 group-hover:text-[#50e2c3] transition-colors">{protocol.name}</span>
+                      <span className="text-xs text-zinc-500 text-right whitespace-nowrap">{protocol.description}</span>
                     </div>
-                  )
+                  </a>
                 ))}
               </div>
             </div>
