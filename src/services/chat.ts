@@ -162,6 +162,99 @@ ${itemData.item.excerpt ? `Excerpt: ${itemData.item.excerpt}` : ''}`;
 }
 
 /**
+ * Generate a newspaper-style summary for an item (standalone, not stored in chat)
+ */
+export async function summarizeItem(itemId: string): Promise<{
+  headline: string;
+  byline: string;
+  leadParagraph: string;
+  body: string;
+  keyPoints: string[];
+  outlook: string;
+}> {
+  const itemData = await getItemById(itemId);
+  
+  if (!itemData) {
+    return {
+      headline: 'Article Not Found',
+      byline: '',
+      leadParagraph: 'Unable to retrieve article information.',
+      body: '',
+      keyPoints: [],
+      outlook: ''
+    };
+  }
+
+  const prompt = `You are a newspaper editor. Create a structured newspaper-style summary of this news item.
+
+Title: ${itemData.item.originalTitle}
+Source: ${itemData.item.sourceName}
+Summary: ${itemData.item.calmSummary}
+${itemData.item.excerpt ? `Excerpt: ${itemData.item.excerpt}` : ''}
+${itemData.ingestedItem.snippet ? `Full snippet: ${itemData.ingestedItem.snippet}` : ''}
+
+Respond in this exact JSON format (no markdown, just raw JSON):
+{
+  "headline": "A clear, calm headline (no sensationalism)",
+  "byline": "Brief one-line context about the significance",
+  "leadParagraph": "The most important 2-3 sentences summarizing what happened",
+  "body": "Additional context and details in 2-3 sentences",
+  "keyPoints": ["Key point 1", "Key point 2", "Key point 3"],
+  "outlook": "Forward-looking statement about what this means going forward (1-2 sentences)"
+}`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a calm, factual newspaper editor. Always respond with valid JSON only, no markdown or code blocks.' 
+        },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.5,
+      max_tokens: 800
+    });
+
+    const content = completion.choices[0]?.message?.content || '{}';
+    
+    // Parse JSON response
+    try {
+      const parsed = JSON.parse(content.replace(/```json\n?|\n?```/g, '').trim());
+      return {
+        headline: parsed.headline || itemData.item.calmHeadline,
+        byline: parsed.byline || `From ${itemData.item.sourceName}`,
+        leadParagraph: parsed.leadParagraph || itemData.item.calmSummary,
+        body: parsed.body || '',
+        keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+        outlook: parsed.outlook || ''
+      };
+    } catch {
+      // Fallback if JSON parsing fails
+      return {
+        headline: itemData.item.calmHeadline,
+        byline: `From ${itemData.item.sourceName}`,
+        leadParagraph: itemData.item.calmSummary,
+        body: itemData.item.excerpt || '',
+        keyPoints: [],
+        outlook: ''
+      };
+    }
+  } catch (error) {
+    console.error('[Chat] Summarize error:', error);
+    return {
+      headline: itemData.item.calmHeadline,
+      byline: `From ${itemData.item.sourceName}`,
+      leadParagraph: itemData.item.calmSummary,
+      body: itemData.item.excerpt || '',
+      keyPoints: [],
+      outlook: 'Unable to generate AI summary at this time.'
+    };
+  }
+}
+
+/**
  * Get chat history for a session
  */
 export async function getChatHistory(sessionId: string, limit = 50): Promise<ChatMessage[]> {

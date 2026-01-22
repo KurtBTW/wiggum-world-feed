@@ -1,13 +1,13 @@
 // POST /api/chat - Send chat message and get GPT-5.2 response
 import { NextResponse } from 'next/server';
-import { processChatMessage, explainItem, getChatHistory, clearChatHistory } from '@/services/chat';
+import { processChatMessage, explainItem, summarizeItem, getChatHistory, clearChatHistory } from '@/services/chat';
 import { z } from 'zod';
 
 const ChatRequestSchema = z.object({
   sessionId: z.string().min(1),
-  message: z.string().min(1).max(2000),
+  message: z.string().max(2000).default(''),
   boundItemId: z.string().optional(),
-  action: z.enum(['message', 'explain', 'history', 'clear']).default('message')
+  action: z.enum(['message', 'explain', 'summarize', 'history', 'clear']).default('message')
 });
 
 export async function POST(request: Request) {
@@ -25,6 +25,17 @@ export async function POST(request: Request) {
     const { sessionId, message, boundItemId, action } = parsed.data;
     
     switch (action) {
+      case 'summarize': {
+        if (!boundItemId) {
+          return NextResponse.json(
+            { error: 'boundItemId required for summarize action' },
+            { status: 400 }
+          );
+        }
+        const summary = await summarizeItem(boundItemId);
+        return NextResponse.json({ summary });
+      }
+      
       case 'explain': {
         if (!boundItemId) {
           return NextResponse.json(

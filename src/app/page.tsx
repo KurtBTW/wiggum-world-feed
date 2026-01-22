@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { TileCard } from '@/components/TileCard';
-import { ItemDrawer } from '@/components/ItemDrawer';
-import { ChatTerminal, ChatTerminalHandle } from '@/components/ChatTerminal';
+import { ArticleSummary } from '@/components/ArticleSummary';
 import { LatestFeed } from '@/components/LatestFeed';
 import { HypurrPaw } from '@/components/HypurrPaw';
 import type { TileSnapshot, TileItem, Category } from '@/types';
@@ -16,11 +15,9 @@ const CATEGORIES: Category[] = ['technology', 'crypto', 'ai', 'business', 'marke
 export default function Home() {
   const [tiles, setTiles] = useState<Record<Category, TileSnapshot | null>>({} as Record<Category, TileSnapshot | null>);
   const [selectedItem, setSelectedItem] = useState<TileItem | null>(null);
-  const [boundItem, setBoundItem] = useState<TileItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const chatRef = useRef<ChatTerminalHandle>(null);
   const [sessionId] = useState(() => 
     typeof window !== 'undefined' 
       ? localStorage.getItem('chatSessionId') || uuidv4()
@@ -72,14 +69,6 @@ export default function Home() {
 
   const handleItemClick = (item: TileItem) => {
     setSelectedItem(item);
-    setBoundItem(item);
-  };
-
-  const handleExplain = async (item: TileItem) => {
-    // Close the drawer and open chat with explanation
-    setSelectedItem(null);
-    setBoundItem(item);
-    chatRef.current?.openAndExplain(item);
   };
 
   if (isLoading) {
@@ -154,7 +143,7 @@ export default function Home() {
                 News That Purrrrs
               </h2>
               <p className="text-sm text-zinc-500 max-w-md mx-auto">
-                Curated news filtered for optimism and forward progress. No doom, no hype.
+                Click any article for an AI-powered newspaper-style summary. No doom, no hype.
               </p>
             </div>
 
@@ -181,7 +170,7 @@ export default function Home() {
                   <p className="text-xs text-zinc-500 leading-relaxed">
                     Every hour, we fetch news from trusted sources, score them for optimism and forward-progress, 
                     run a 20-pass refinement loop to filter sensationalism, and present only the most constructive updates.
-                    Click any item to read more or ask AI for deeper insights.
+                    Click any article for a GPT-5.2 powered summary.
                   </p>
                 </div>
               </div>
@@ -200,22 +189,13 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Item Drawer */}
+      {/* Article Summary Popup */}
       {selectedItem && (
-        <ItemDrawer
+        <ArticleSummary
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
-          onExplain={() => handleExplain(selectedItem)}
         />
       )}
-
-      {/* Floating Chat Terminal */}
-      <ChatTerminal
-        ref={chatRef}
-        sessionId={sessionId}
-        boundItem={boundItem}
-        onClearBoundItem={() => setBoundItem(null)}
-      />
     </div>
   );
 }
