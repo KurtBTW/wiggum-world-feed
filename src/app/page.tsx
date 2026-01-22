@@ -249,7 +249,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
       <header className="border-b border-white/[0.08]">
-        <div className="max-w-[1400px] mx-auto px-4 py-3">
+        <div className="max-w-[1600px] mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Left - HypurrFi Logo */}
             <div className="flex items-center gap-3">
@@ -296,9 +296,9 @@ export default function Home() {
 
       {/* Navigation Tabs */}
       <nav className="border-b border-white/[0.08] bg-[#0f0f0f]">
-        <div className="max-w-[1400px] mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex">
+        <div className="max-w-[1600px] mx-auto px-4">
+          <div className="flex items-center justify-center">
+            <div className="flex items-center">
               <button
                 onClick={() => setSelectedCategory('all')}
                 className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -322,20 +322,19 @@ export default function Home() {
                   {cat.label}
                 </button>
               ))}
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 px-3 py-1.5 ml-6 text-xs text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {lastUpdated && (
+                  <span>
+                    {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </span>
+                )}
+              </button>
             </div>
-            
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {lastUpdated && (
-                <span>
-                  {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                </span>
-              )}
-            </button>
           </div>
         </div>
       </nav>
@@ -361,10 +360,10 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-[1400px] mx-auto px-4 py-6">
-        <div className="flex gap-6">
+      <main className="max-w-[1600px] mx-auto px-4 py-6">
+        <div className="flex gap-8">
           {/* Left Sidebar - Featured Protocols */}
-          <aside className="w-52 flex-shrink-0 hidden xl:block">
+          <aside className="w-56 flex-shrink-0 hidden xl:block">
             <div className="sticky top-4">
               <div className="border-b-2 border-[#50e2c3] pb-2 mb-4">
                 <h3 className="text-sm font-bold text-white">Featured</h3>
@@ -378,7 +377,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="block py-2 px-3 -mx-1 rounded text-sm hover:bg-white/[0.03] transition-all group"
                   >
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-3">
                       <span className="font-medium text-zinc-300 group-hover:text-[#50e2c3] transition-colors">{protocol.name}</span>
                       <span className="text-xs text-zinc-500 text-right whitespace-nowrap">{protocol.description}</span>
                     </div>
@@ -514,7 +513,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-white/[0.06] mt-12 py-8">
-        <div className="max-w-[1400px] mx-auto px-4">
+        <div className="max-w-[1600px] mx-auto px-4">
           <div className="flex items-center justify-between text-sm text-zinc-500">
             <div className="flex items-center gap-4">
               <span className="font-medium text-zinc-400">HypurrRelevant</span>
