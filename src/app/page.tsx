@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Loader2, ExternalLink, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import { ArticleSummary } from '@/components/ArticleSummary';
 import { ChatWidget } from '@/components/ChatWidget';
 import type { TileSnapshot, TileItem, Category } from '@/types';
+
+// HypurrFi brand color
+const TEAL = '#50e2c3';
 
 const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'defi_alpha', label: 'DeFi Alpha' },
@@ -149,8 +153,8 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-[#fbbf24]/20 to-[#22c55e]/20 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#fbbf24]" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#50e2c3]/10 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-[#50e2c3]" />
           </div>
           <p className="text-zinc-500 text-sm">Loading...</p>
         </div>
@@ -162,28 +166,35 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
       <header className="border-b border-white/[0.08]">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Left spacer */}
-            <div className="w-32" />
-            
-            {/* Center - Logo */}
-            <div className="text-center">
-              <h1 className="text-3xl font-bold">
-                <span className="bg-gradient-to-r from-[#fbbf24] to-[#22c55e] bg-clip-text text-transparent">
-                  HypurrRelevant
-                </span>
-              </h1>
-              <p className="text-zinc-500 text-xs mt-0.5">Crypto & AI News That Matters</p>
+            {/* Left - HypurrFi Logo */}
+            <div className="flex items-center gap-3">
+              <Image
+                src="/hypurrfi-logo.png"
+                alt="HypurrFi"
+                width={140}
+                height={40}
+                className="h-9 w-auto"
+                priority
+              />
             </div>
             
-            {/* Right - HypurrFi links */}
-            <div className="flex items-center gap-4 w-32 justify-end">
+            {/* Center - HypurrRelevant */}
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-white">
+                HypurrRelevant
+              </h1>
+              <p className="text-zinc-500 text-xs">Crypto & AI News That Matters</p>
+            </div>
+            
+            {/* Right - Launch App */}
+            <div className="flex items-center gap-4">
               <a
                 href="https://hypurr.fi"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-zinc-400 hover:text-[#fbbf24] transition-colors"
+                className="text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors hidden sm:block"
               >
                 HypurrFi
               </a>
@@ -191,7 +202,7 @@ export default function Home() {
                 href="https://app.hypurr.fi"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm px-3 py-1.5 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#22c55e] text-black font-medium hover:opacity-90 transition-opacity"
+                className="text-sm px-4 py-2 rounded-full border-2 border-[#50e2c3] text-[#50e2c3] font-medium hover:bg-[#50e2c3] hover:text-black transition-all"
               >
                 Launch App
               </a>
@@ -209,7 +220,7 @@ export default function Home() {
                 onClick={() => setSelectedCategory('all')}
                 className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
                   selectedCategory === 'all'
-                    ? 'text-[#fbbf24] border-[#fbbf24]'
+                    ? 'text-[#50e2c3] border-[#50e2c3]'
                     : 'text-zinc-400 border-transparent hover:text-white'
                 }`}
               >
@@ -221,7 +232,7 @@ export default function Home() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
                     selectedCategory === cat.id
-                      ? 'text-[#fbbf24] border-[#fbbf24]'
+                      ? 'text-[#50e2c3] border-[#50e2c3]'
                       : 'text-zinc-400 border-transparent hover:text-white'
                   }`}
                 >
@@ -265,14 +276,14 @@ export default function Home() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#fbbf24]/20 to-[#22c55e]/20" />
+                    <div className="w-full h-full bg-gradient-to-br from-[#50e2c3]/20 to-[#50e2c3]/20" />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#fbbf24] text-black mb-3">
+                    <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#50e2c3] text-black mb-3">
                       {getCategoryLabel(heroStory.category)}
                     </span>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#fbbf24] transition-colors">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#50e2c3] transition-colors">
                       {heroStory.calmHeadline}
                     </h2>
                     <p className="text-zinc-300 mt-2 line-clamp-2 max-w-2xl">
@@ -309,7 +320,7 @@ export default function Home() {
           <aside className="w-80 flex-shrink-0 hidden lg:block">
             {/* Latest Section */}
             <div className="sticky top-4">
-              <div className="border-b-2 border-[#fbbf24] pb-2 mb-4">
+              <div className="border-b-2 border-[#50e2c3] pb-2 mb-4">
                 <h3 className="text-lg font-bold text-white">Latest</h3>
               </div>
               <div className="space-y-0">
@@ -324,7 +335,7 @@ export default function Home() {
                         {getTimeAgo(item.publishedAt)}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-zinc-300 leading-snug group-hover:text-[#fbbf24] transition-colors line-clamp-2">
+                        <p className="text-sm text-zinc-300 leading-snug group-hover:text-[#50e2c3] transition-colors line-clamp-2">
                           {item.calmHeadline}
                         </p>
                         <span className="text-xs text-zinc-500 mt-1 block">
@@ -344,7 +355,7 @@ export default function Home() {
                     href="https://app.hypurr.fi"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#fbbf24] transition-colors"
+                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
                   >
                     <span>Trade on HypurrFi</span>
                     <ChevronRight className="w-4 h-4" />
@@ -353,7 +364,7 @@ export default function Home() {
                     href="https://hyperliquid.xyz"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#fbbf24] transition-colors"
+                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
                   >
                     <span>Hyperliquid</span>
                     <ChevronRight className="w-4 h-4" />
@@ -362,7 +373,7 @@ export default function Home() {
                     href="https://dexscreener.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#fbbf24] transition-colors"
+                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
                   >
                     <span>DEX Screener</span>
                     <ChevronRight className="w-4 h-4" />
@@ -371,7 +382,7 @@ export default function Home() {
                     href="https://defillama.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#fbbf24] transition-colors"
+                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
                   >
                     <span>DefiLlama</span>
                     <ChevronRight className="w-4 h-4" />
@@ -392,13 +403,13 @@ export default function Home() {
               <span>Part of the HypurrFi ecosystem</span>
             </div>
             <div className="flex items-center gap-4">
-              <a href="https://twitter.com/hypurrfi" target="_blank" rel="noopener noreferrer" className="hover:text-[#fbbf24] transition-colors">
+              <a href="https://twitter.com/hypurrfi" target="_blank" rel="noopener noreferrer" className="hover:text-[#50e2c3] transition-colors">
                 Twitter
               </a>
-              <a href="https://discord.gg/hypurrfi" target="_blank" rel="noopener noreferrer" className="hover:text-[#fbbf24] transition-colors">
+              <a href="https://discord.gg/hypurrfi" target="_blank" rel="noopener noreferrer" className="hover:text-[#50e2c3] transition-colors">
                 Discord
               </a>
-              <a href="https://hypurr.fi" target="_blank" rel="noopener noreferrer" className="hover:text-[#fbbf24] transition-colors">
+              <a href="https://hypurr.fi" target="_blank" rel="noopener noreferrer" className="hover:text-[#50e2c3] transition-colors">
                 HypurrFi
               </a>
             </div>
@@ -457,10 +468,10 @@ function StoryCard({
       
       {/* Content */}
       <div>
-        <span className="text-xs font-medium text-[#fbbf24]">
+        <span className="text-xs font-medium text-[#50e2c3]">
           {getCategoryLabel(item.category)}
         </span>
-        <h3 className="text-lg font-semibold text-white leading-snug mt-1 group-hover:text-[#fbbf24] transition-colors line-clamp-2">
+        <h3 className="text-lg font-semibold text-white leading-snug mt-1 group-hover:text-[#50e2c3] transition-colors line-clamp-2">
           {item.calmHeadline}
         </h3>
         <p className="text-sm text-zinc-400 mt-2 line-clamp-2">
