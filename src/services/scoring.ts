@@ -4,9 +4,7 @@ import {
   getScoringWeights, 
   getScoringPenalties, 
   getCategoryThresholds,
-  getSourcesForCategory,
-  mentionsMajorCompany,
-  getCalmSummaryConfig
+  getSourcesForCategory
 } from './config';
 import type { Category, ItemScores, IngestedItemWithScores } from '@/types';
 
@@ -200,23 +198,6 @@ export async function scoreUnprocessedItems(category: Category): Promise<number>
       item.publishedAt,
       category as Category
     );
-    
-    // Apply business category filter
-    if (category === 'business') {
-      const thresholds = getCategoryThresholds(category);
-      if (thresholds.requireCompanyMatch && !mentionsMajorCompany(item.title + ' ' + (item.excerpt || ''))) {
-        // Mark as processed but don't include in results
-        await prisma.ingestedItem.update({
-          where: { id: item.id },
-          data: {
-            processed: true,
-            ...scores,
-            totalScore: 0 // Override to exclude from selection
-          }
-        });
-        continue;
-      }
-    }
     
     await prisma.ingestedItem.update({
       where: { id: item.id },

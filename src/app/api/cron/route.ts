@@ -3,7 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import { updateAllTiles } from '@/services/tiles';
-import { checkMarketMovements } from '@/services/market-data';
+import { refreshMarketData } from '@/services/market-data';
 
 export async function GET(request: Request) {
   // Verify cron secret in production
@@ -18,8 +18,8 @@ export async function GET(request: Request) {
     // Update tiles
     const tiles = await updateAllTiles();
     
-    // Check market movements
-    const marketResults = await checkMarketMovements();
+    // Refresh market data
+    const marketData = await refreshMarketData();
     
     const summary = {
       timestamp: new Date().toISOString(),
@@ -28,10 +28,10 @@ export async function GET(request: Request) {
         itemCount: snapshot?.items.length || 0,
         wiggumPasses: snapshot?.wiggumPasses || 0
       })),
-      market: marketResults.map(r => ({
-        asset: r.asset,
-        change: r.dailyChange.toFixed(2) + '%',
-        triggered: r.triggered
+      market: marketData.map(d => ({
+        symbol: d.symbol,
+        price: d.price.toFixed(2),
+        change24h: d.change24h.toFixed(2) + '%'
       }))
     };
 

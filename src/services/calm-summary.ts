@@ -150,16 +150,14 @@ function toTitleCase(str: string): string {
  */
 function getCategoryPrefix(category: Category): string {
   switch (category) {
-    case 'technology':
-      return 'In technology news,';
-    case 'crypto':
-      return 'In cryptocurrency developments,';
-    case 'ai':
-      return 'In AI research,';
-    case 'business':
-      return 'In business news,';
-    case 'market_movements':
-      return 'Market update:';
+    case 'defi_alpha':
+      return 'In DeFi,';
+    case 'token_launches':
+      return 'New token:';
+    case 'security_alerts':
+      return 'Security alert:';
+    case 'ai_frontier':
+      return 'In AI,';
     default:
       return '';
   }

@@ -60,11 +60,6 @@ export async function updateAllTiles(): Promise<Record<Category, TileSnapshot | 
   const results: Record<Category, TileSnapshot | null> = {} as Record<Category, TileSnapshot | null>;
   
   for (const category of ALL_CATEGORIES) {
-    if (category === 'market_movements') {
-      // Market movements handled separately
-      continue;
-    }
-    
     try {
       results[category] = await updateTile(category);
     } catch (error) {
@@ -72,9 +67,6 @@ export async function updateAllTiles(): Promise<Record<Category, TileSnapshot | 
       results[category] = await getLatestSnapshot(category);
     }
   }
-  
-  // Handle market movements separately
-  results.market_movements = await getLatestSnapshot('market_movements');
   
   return results;
 }
@@ -199,7 +191,20 @@ function transformSnapshot(prismaSnapshot: any): TileSnapshot {
       url: item.ingestedItem.url,
       imageUrl: item.ingestedItem.imageUrl || undefined,
       publishedAt: item.ingestedItem.publishedAt,
-      excerpt: item.ingestedItem.excerpt || undefined
+      excerpt: item.ingestedItem.excerpt || undefined,
+      // Token-specific fields
+      chainId: item.ingestedItem.chainId || undefined,
+      tokenAddress: item.ingestedItem.tokenAddress || undefined,
+      securityScore: item.ingestedItem.securityScore || undefined,
+      riskLevel: item.ingestedItem.riskLevel || undefined,
+      priceUsd: item.ingestedItem.priceUsd || undefined,
+      priceChange24h: item.ingestedItem.priceChange24h || undefined,
+      volume24h: item.ingestedItem.volume24h || undefined,
+      liquidity: item.ingestedItem.liquidity || undefined,
+      // DeFi-specific fields
+      tvl: item.ingestedItem.tvl || undefined,
+      tvlChange24h: item.ingestedItem.tvlChange24h || undefined,
+      apy: item.ingestedItem.apy || undefined
     }))
   };
 }

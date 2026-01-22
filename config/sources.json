@@ -1,45 +1,15 @@
 {
-  "technology": {
+  "defi_alpha": {
     "rss": [
       {
-        "url": "https://techcrunch.com/feed/",
-        "name": "TechCrunch",
+        "url": "https://thedefiant.io/feed",
+        "name": "The Defiant",
         "credibility": "high"
       },
       {
-        "url": "https://www.theverge.com/rss/index.xml",
-        "name": "The Verge",
+        "url": "https://blockworks.co/feed",
+        "name": "Blockworks",
         "credibility": "high"
-      },
-      {
-        "url": "https://arstechnica.com/feed/",
-        "name": "Ars Technica",
-        "credibility": "high"
-      },
-      {
-        "url": "https://www.wired.com/feed/rss",
-        "name": "Wired",
-        "credibility": "high"
-      },
-      {
-        "url": "https://feeds.feedburner.com/TechCrunch/",
-        "name": "TechCrunch",
-        "credibility": "high"
-      },
-      {
-        "url": "https://news.ycombinator.com/rss",
-        "name": "Hacker News",
-        "credibility": "medium"
-      }
-    ],
-    "keywords": ["release", "launch", "prototype", "research", "discovery", "breakthrough", "innovation", "development", "update", "announced"]
-  },
-  "crypto": {
-    "rss": [
-      {
-        "url": "https://cointelegraph.com/rss",
-        "name": "Cointelegraph",
-        "credibility": "medium"
       },
       {
         "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
@@ -47,33 +17,90 @@
         "credibility": "high"
       },
       {
+        "url": "https://cointelegraph.com/rss",
+        "name": "Cointelegraph",
+        "credibility": "medium"
+      },
+      {
+        "url": "https://decrypt.co/feed",
+        "name": "Decrypt",
+        "credibility": "medium"
+      }
+    ],
+    "keywords": ["DeFi", "TVL", "yield", "protocol", "liquidity", "staking", "lending", "DEX", "AMM", "vault", "farm", "airdrop", "governance"],
+    "apis": {
+      "defillama": {
+        "protocols": "https://api.llama.fi/protocols",
+        "tvl": "https://api.llama.fi/tvl",
+        "yields": "https://yields.llama.fi/pools"
+      }
+    }
+  },
+  "token_launches": {
+    "rss": [
+      {
         "url": "https://decrypt.co/feed",
         "name": "Decrypt",
         "credibility": "medium"
       },
       {
-        "url": "https://bitcoinmagazine.com/.rss/full/",
-        "name": "Bitcoin Magazine",
+        "url": "https://cointelegraph.com/rss",
+        "name": "Cointelegraph",
         "credibility": "medium"
       }
     ],
-    "keywords": ["blockchain", "protocol", "mainnet", "testnet", "upgrade", "development", "launch", "partnership", "integration", "token", "chain", "layer"]
+    "keywords": ["launch", "token", "IDO", "presale", "listing", "memecoin", "pump", "fair launch", "airdrop"],
+    "apis": {
+      "dexscreener": {
+        "baseUrl": "https://api.dexscreener.com",
+        "latestProfiles": "/token-profiles/latest/v1",
+        "searchPairs": "/latest/dex/search",
+        "pairsByChain": "/latest/dex/pairs"
+      }
+    },
+    "chains": ["solana", "ethereum", "base", "arbitrum", "hyperliquid", "bsc", "sui", "avalanche", "polygon", "berachain"]
   },
-  "ai": {
+  "security_alerts": {
     "rss": [
       {
-        "url": "https://blog.openai.com/rss/",
-        "name": "OpenAI Blog",
-        "credibility": "primary"
+        "url": "https://rekt.news/rss.xml",
+        "name": "Rekt News",
+        "credibility": "high"
       },
       {
-        "url": "https://ai.googleblog.com/feeds/posts/default",
-        "name": "Google AI Blog",
+        "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+        "name": "CoinDesk",
+        "credibility": "high"
+      },
+      {
+        "url": "https://cointelegraph.com/rss",
+        "name": "Cointelegraph",
+        "credibility": "medium"
+      }
+    ],
+    "keywords": ["hack", "exploit", "rug", "scam", "vulnerability", "breach", "stolen", "drained", "attack", "compromised", "honeypot", "flash loan"],
+    "apis": {
+      "goplus": {
+        "baseUrl": "https://api.gopluslabs.io/api/v1",
+        "tokenSecurity": "/token_security"
+      }
+    }
+  },
+  "ai_frontier": {
+    "rss": [
+      {
+        "url": "https://openai.com/blog/rss.xml",
+        "name": "OpenAI Blog",
         "credibility": "primary"
       },
       {
         "url": "https://www.anthropic.com/feed.xml",
         "name": "Anthropic",
+        "credibility": "primary"
+      },
+      {
+        "url": "https://huggingface.co/blog/feed.xml",
+        "name": "Hugging Face",
         "credibility": "primary"
       },
       {
@@ -87,64 +114,29 @@
         "credibility": "primary"
       },
       {
+        "url": "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
+        "name": "The Verge AI",
+        "credibility": "high"
+      },
+      {
+        "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+        "name": "TechCrunch AI",
+        "credibility": "high"
+      },
+      {
         "url": "https://venturebeat.com/category/ai/feed/",
         "name": "VentureBeat AI",
         "credibility": "high"
-      },
-      {
-        "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
-        "name": "MIT Tech Review AI",
-        "credibility": "high"
       }
     ],
-    "keywords": ["model", "release", "benchmark", "research", "paper", "breakthrough", "capability", "training", "inference", "deployment", "open-source"]
+    "keywords": ["model", "GPT", "Claude", "Gemini", "Llama", "agent", "LLM", "benchmark", "training", "inference", "open-source", "weights", "fine-tune", "RLHF", "reasoning", "multimodal"]
   },
-  "business": {
-    "rss": [
-      {
-        "url": "https://feeds.reuters.com/reuters/businessNews",
-        "name": "Reuters Business",
-        "credibility": "high"
-      },
-      {
-        "url": "https://www.wsj.com/xml/rss/3_7014.xml",
-        "name": "WSJ Business",
-        "credibility": "high"
-      },
-      {
-        "url": "https://feeds.bloomberg.com/markets/news.rss",
-        "name": "Bloomberg",
-        "credibility": "high"
-      },
-      {
-        "url": "https://www.ft.com/?format=rss",
-        "name": "Financial Times",
-        "credibility": "high"
-      },
-      {
-        "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&company=&dateb=&owner=include&count=100&output=atom",
-        "name": "SEC Filings",
-        "credibility": "primary"
-      }
-    ],
-    "keywords": ["acquisition", "merger", "CEO", "leadership", "appointed", "strategic", "partnership", "restructuring", "expansion", "investment"]
-  },
-  "market_movements": {
-    "dataProviders": [
-      {
-        "name": "yahoo_finance",
-        "assets": {
-          "SP500": "^GSPC",
-          "GOLD": "GC=F",
-          "BTC": "BTC-USD"
-        }
-      },
-      {
-        "name": "alpha_vantage",
-        "apiKeyEnv": "ALPHA_VANTAGE_API_KEY"
-      }
-    ],
-    "thresholdPercent": 5,
-    "newsCorpusHours": 48
+  "marketData": {
+    "assets": [
+      { "symbol": "BTC", "name": "Bitcoin", "coingeckoId": "bitcoin" },
+      { "symbol": "ETH", "name": "Ethereum", "coingeckoId": "ethereum" },
+      { "symbol": "SOL", "name": "Solana", "coingeckoId": "solana" },
+      { "symbol": "HYPE", "name": "Hyperliquid", "coingeckoId": "hyperliquid" }
+    ]
   }
 }

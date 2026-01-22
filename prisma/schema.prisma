@@ -1,4 +1,4 @@
-// Wiggum World Feed - Database Schema
+// HypurrRelevancy - Database Schema
 // PostgreSQL for production
 
 generator client {
@@ -21,7 +21,7 @@ model IngestedItem {
   imageUrl      String?
   source        String
   sourceName    String
-  category      String
+  category      String   // defi_alpha, token_launches, security_alerts, ai_frontier
   publishedAt   DateTime
   fetchedAt     DateTime @default(now())
   excerpt       String?
@@ -36,9 +36,34 @@ model IngestedItem {
   topicFitScore        Float @default(0)
   totalScore           Float @default(0)
   
+  // Token-specific fields (for token_launches category)
+  chainId       String?  // solana, ethereum, base, etc.
+  tokenAddress  String?
+  tokenSymbol   String?
+  priceUsd      Float?
+  priceChange24h Float?
+  volume24h     Float?
+  liquidity     Float?
+  fdv           Float?   // Fully diluted valuation
+  pairAddress   String?
+  dexId         String?
+  
+  // Security fields (from GoPlus)
+  securityScore Int?     // 0-100
+  riskLevel     String?  // safe, low, medium, high, critical
+  isHoneypot    Boolean?
+  securityData  String?  // Full JSON security data
+  
+  // DeFi-specific fields (for defi_alpha category)
+  tvl           Float?
+  tvlChange24h  Float?
+  apy           Float?
+  protocolName  String?
+  
   // Processing status
   processed       Boolean @default(false)
   selectedForTile Boolean @default(false)
+  hiddenBySecurity Boolean @default(false) // Auto-hidden due to security issues
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -50,6 +75,8 @@ model IngestedItem {
   @@index([category])
   @@index([publishedAt])
   @@index([totalScore])
+  @@index([chainId])
+  @@index([riskLevel])
 }
 
 // Tile snapshots - persisted for "no new keep tile" behavior
@@ -97,26 +124,24 @@ model TileItem {
   @@index([snapshotId])
 }
 
-// Market data for Market Movements tile
+// Cached market data for sidebar display
 model MarketData {
   id          String   @id @default(uuid())
-  asset       String   // SP500, GOLD, BTC
-  date        DateTime
-  openPrice   Float
-  closePrice  Float
-  dailyChange Float    // percentage
-  
-  // Possible reasons (JSON array)
-  possibleReasons String?
+  symbol      String   // BTC, ETH, SOL, HYPE
+  name        String
+  price       Float
+  change24h   Float    // percentage
+  volume24h   Float?
+  marketCap   Float?
   
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   
-  @@unique([asset, date])
-  @@index([asset])
-  @@index([date])
+  @@unique([symbol])
+  @@index([symbol])
 }
 
-// Chat history for the terminal
+// Chat history for the assistant
 model ChatMessage {
   id        String   @id @default(uuid())
   sessionId String
@@ -131,6 +156,35 @@ model ChatMessage {
   
   @@index([sessionId])
   @@index([createdAt])
+}
+
+// Trending tokens cache (from DEX Screener)
+model TrendingToken {
+  id            String   @id @default(uuid())
+  chainId       String
+  tokenAddress  String
+  symbol        String
+  name          String
+  priceUsd      Float
+  priceChange24h Float
+  volume24h     Float
+  liquidity     Float
+  fdv           Float?
+  pairAddress   String
+  dexId         String
+  url           String
+  imageUrl      String?
+  
+  // Security data
+  securityScore Int?
+  riskLevel     String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([chainId, tokenAddress])
+  @@index([chainId])
+  @@index([priceChange24h])
 }
 
 // Wiggum loop iteration logs for debugging

@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { ExternalLink, Clock, TrendingUp, Cpu, Coins, Bot, Briefcase, BarChart3 } from 'lucide-react';
+import { ExternalLink, Clock, TrendingUp, Gem, Rocket, ShieldAlert, Bot } from 'lucide-react';
 import type { TileSnapshot, TileItem, Category } from '@/types';
 
 interface TileCardProps {
@@ -12,11 +12,10 @@ interface TileCardProps {
 }
 
 const CATEGORY_CONFIG: Record<Category, { icon: React.ReactNode; label: string }> = {
-  technology: { icon: <Cpu className="w-4 h-4" />, label: 'Technology' },
-  crypto: { icon: <Coins className="w-4 h-4" />, label: 'Crypto' },
-  ai: { icon: <Bot className="w-4 h-4" />, label: 'AI' },
-  business: { icon: <Briefcase className="w-4 h-4" />, label: 'Business' },
-  market_movements: { icon: <BarChart3 className="w-4 h-4" />, label: 'Markets' }
+  defi_alpha: { icon: <Gem className="w-4 h-4" />, label: 'DeFi Alpha' },
+  token_launches: { icon: <Rocket className="w-4 h-4" />, label: 'Token Launches' },
+  security_alerts: { icon: <ShieldAlert className="w-4 h-4" />, label: 'Security' },
+  ai_frontier: { icon: <Bot className="w-4 h-4" />, label: 'AI Frontier' }
 };
 
 export function TileCard({ category, snapshot, onItemClick }: TileCardProps) {

@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { ExternalLink, Clock, Zap, Cpu, Coins, Bot, Briefcase, BarChart3 } from 'lucide-react';
+import { ExternalLink, Clock, Zap, Gem, Rocket, ShieldAlert, Bot } from 'lucide-react';
 import type { TileSnapshot, TileItem, Category } from '@/types';
 
 interface LatestFeedProps {
@@ -11,27 +11,24 @@ interface LatestFeedProps {
 }
 
 const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
-  technology: <Cpu className="w-3 h-3" />,
-  crypto: <Coins className="w-3 h-3" />,
-  ai: <Bot className="w-3 h-3" />,
-  business: <Briefcase className="w-3 h-3" />,
-  market_movements: <BarChart3 className="w-3 h-3" />
+  defi_alpha: <Gem className="w-3 h-3" />,
+  token_launches: <Rocket className="w-3 h-3" />,
+  security_alerts: <ShieldAlert className="w-3 h-3" />,
+  ai_frontier: <Bot className="w-3 h-3" />
 };
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  technology: 'Tech',
-  crypto: 'Crypto',
-  ai: 'AI',
-  business: 'Business',
-  market_movements: 'Markets'
+  defi_alpha: 'DeFi',
+  token_launches: 'Tokens',
+  security_alerts: 'Security',
+  ai_frontier: 'AI'
 };
 
 const CATEGORY_COLORS: Record<Category, string> = {
-  technology: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  crypto: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  ai: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  business: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  market_movements: 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+  defi_alpha: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  token_launches: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  security_alerts: 'bg-red-500/20 text-red-400 border-red-500/30',
+  ai_frontier: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
 };
 
 interface CombinedItem extends TileItem {

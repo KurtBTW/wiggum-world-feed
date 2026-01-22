@@ -1,8 +1,11 @@
-// RSS Feed Ingestion Service
+// RSS Feed and API Ingestion Service
 import Parser from 'rss-parser';
 import { prisma } from '@/lib/prisma';
-import { getSourcesForCategory, getGlobalThresholds } from './config';
-import type { Category, RSSFeedItem, Source } from '@/types';
+import { getSourcesForCategory, getGlobalThresholds, RSS_CATEGORIES } from './config';
+import { fetchNewTokensForIngestion, pairToToken, getChainDisplayName } from './dexscreener';
+import { fetchDefiUpdatesForIngestion, formatTVL, formatChange } from './defillama';
+import { checkTokenSecurity, passesSecurityCheck, getSecurityReasons } from './goplus';
+import type { Category, Source, SupportedChain, DexScreenerToken } from '@/types';
 
 // Custom RSS parser with media support
 type CustomFeed = { items: CustomItem[] };
@@ -23,7 +26,7 @@ type CustomItem = {
 const parser: Parser<CustomFeed, CustomItem> = new Parser({
   timeout: 10000,
   headers: {
-    'User-Agent': 'HypurrRelevant/1.0 (RSS Reader)',
+    'User-Agent': 'HypurrRelevancy/1.0 (RSS Reader)',
   },
   customFields: {
     item: [
@@ -40,6 +43,7 @@ interface IngestResult {
   totalFetched: number;
   newItems: number;
   duplicates: number;
+  hiddenBySecurity: number;
   errors: string[];
 }
 
@@ -52,8 +56,14 @@ export async function ingestCategory(category: Category): Promise<IngestResult> 
     totalFetched: 0,
     newItems: 0,
     duplicates: 0,
+    hiddenBySecurity: 0,
     errors: [],
   };
+
+  // Handle token_launches specially (API-based)
+  if (category === 'token_launches') {
+    return await ingestTokenLaunches();
+  }
 
   const sourceConfig = getSourcesForCategory(category);
   if (!sourceConfig?.rss) {
@@ -121,6 +131,196 @@ export async function ingestCategory(category: Category): Promise<IngestResult> 
 }
 
 /**
+ * Ingest token launches from DEX Screener with security checks
+ */
+async function ingestTokenLaunches(): Promise<IngestResult> {
+  const result: IngestResult = {
+    category: 'token_launches',
+    totalFetched: 0,
+    newItems: 0,
+    duplicates: 0,
+    hiddenBySecurity: 0,
+    errors: [],
+  };
+
+  try {
+    console.log('[Ingestion] Fetching token launches from DEX Screener...');
+    const { tokens, pairs } = await fetchNewTokensForIngestion();
+    
+    // Combine tokens from profiles and pairs
+    const allTokens: DexScreenerToken[] = [
+      ...tokens,
+      ...pairs.map(p => pairToToken(p))
+    ];
+    
+    // Dedupe by chainId + tokenAddress
+    const tokenMap = new Map<string, DexScreenerToken>();
+    allTokens.forEach(token => {
+      const key = `${token.chainId}-${token.tokenAddress}`;
+      if (!tokenMap.has(key)) {
+        tokenMap.set(key, token);
+      }
+    });
+    
+    const uniqueTokens = Array.from(tokenMap.values());
+    result.totalFetched = uniqueTokens.length;
+    
+    for (const token of uniqueTokens) {
+      // Create unique URL for deduplication
+      const tokenUrl = token.url || `https://dexscreener.com/${token.chainId}/${token.tokenAddress}`;
+      
+      // Check for duplicates
+      const existing = await prisma.ingestedItem.findUnique({
+        where: { url: tokenUrl },
+      });
+
+      if (existing) {
+        result.duplicates++;
+        continue;
+      }
+      
+      // Check token security
+      let securityResult = null;
+      let hiddenBySecurity = false;
+      
+      try {
+        securityResult = await checkTokenSecurity(
+          token.chainId as SupportedChain, 
+          token.tokenAddress
+        );
+        
+        if (securityResult && !passesSecurityCheck(securityResult)) {
+          hiddenBySecurity = true;
+          result.hiddenBySecurity++;
+          console.log(`[Security] Hiding ${token.symbol} on ${token.chainId}: ${getSecurityReasons(securityResult).join(', ')}`);
+        }
+      } catch (secError) {
+        console.log(`[Security] Could not check ${token.symbol}: ${secError}`);
+      }
+      
+      // Create item
+      try {
+        await prisma.ingestedItem.create({
+          data: {
+            title: `${token.symbol} on ${getChainDisplayName(token.chainId)}`,
+            originalTitle: `${token.name} (${token.symbol})`,
+            url: tokenUrl,
+            imageUrl: token.imageUrl,
+            source: 'dexscreener',
+            sourceName: 'DEX Screener',
+            category: 'token_launches',
+            publishedAt: new Date(token.createdAt),
+            excerpt: `New token: ${token.name} (${token.symbol}) trading at $${token.priceUsd.toFixed(6)} with $${(token.volume24h || 0).toLocaleString()} 24h volume`,
+            
+            // Token-specific fields
+            chainId: token.chainId,
+            tokenAddress: token.tokenAddress,
+            tokenSymbol: token.symbol,
+            priceUsd: token.priceUsd,
+            priceChange24h: token.priceChange24h,
+            volume24h: token.volume24h,
+            liquidity: token.liquidity,
+            fdv: token.fdv,
+            pairAddress: token.pairAddress,
+            dexId: token.dexId,
+            
+            // Security fields
+            securityScore: securityResult?.trustScore,
+            riskLevel: securityResult?.riskLevel,
+            isHoneypot: securityResult?.isHoneypot,
+            securityData: securityResult ? JSON.stringify(securityResult) : null,
+            
+            hiddenBySecurity,
+            credibilityScore: 0.5, // Neutral for new tokens
+          },
+        });
+        result.newItems++;
+      } catch (createError) {
+        result.duplicates++;
+      }
+    }
+    
+    console.log(`[Ingestion] Token launches: ${result.newItems} new, ${result.duplicates} duplicates, ${result.hiddenBySecurity} hidden by security`);
+  } catch (error) {
+    result.errors.push(`DEX Screener: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('[Ingestion] Error fetching token launches:', error);
+  }
+
+  return result;
+}
+
+/**
+ * Ingest DeFi protocol updates (TVL movers)
+ */
+export async function ingestDefiAlpha(): Promise<IngestResult> {
+  const result: IngestResult = {
+    category: 'defi_alpha',
+    totalFetched: 0,
+    newItems: 0,
+    duplicates: 0,
+    hiddenBySecurity: 0,
+    errors: [],
+  };
+
+  try {
+    console.log('[Ingestion] Fetching DeFi alpha from DefiLlama...');
+    const { protocols, yields } = await fetchDefiUpdatesForIngestion();
+    
+    result.totalFetched = protocols.length;
+    
+    for (const protocol of protocols) {
+      const protocolUrl = protocol.url || `https://defillama.com/protocol/${protocol.id}`;
+      
+      // Check for duplicates
+      const existing = await prisma.ingestedItem.findUnique({
+        where: { url: protocolUrl },
+      });
+
+      if (existing) {
+        result.duplicates++;
+        continue;
+      }
+      
+      const changeDirection = protocol.change_1d >= 0 ? 'up' : 'down';
+      const changeEmoji = protocol.change_1d >= 0 ? '📈' : '📉';
+      
+      try {
+        await prisma.ingestedItem.create({
+          data: {
+            title: `${protocol.name} TVL ${changeEmoji} ${formatChange(protocol.change_1d)}`,
+            originalTitle: `${protocol.name} (${protocol.symbol || 'N/A'})`,
+            url: protocolUrl,
+            imageUrl: protocol.logo,
+            source: 'defillama',
+            sourceName: 'DefiLlama',
+            category: 'defi_alpha',
+            publishedAt: new Date(),
+            excerpt: `${protocol.name} TVL is now ${formatTVL(protocol.tvl)}, ${changeDirection} ${Math.abs(protocol.change_1d).toFixed(2)}% in 24h. Category: ${protocol.category}`,
+            
+            // DeFi-specific fields
+            tvl: protocol.tvl,
+            tvlChange24h: protocol.change_1d,
+            protocolName: protocol.name,
+            
+            credibilityScore: 0.8, // DefiLlama is reliable
+          },
+        });
+        result.newItems++;
+      } catch (createError) {
+        result.duplicates++;
+      }
+    }
+    
+    console.log(`[Ingestion] DeFi alpha: ${result.newItems} new, ${result.duplicates} duplicates`);
+  } catch (error) {
+    result.errors.push(`DefiLlama: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('[Ingestion] Error fetching DeFi alpha:', error);
+  }
+
+  return result;
+}
+
+/**
  * Extract image URL from RSS item
  */
 function extractImageUrl(item: CustomItem): string | null {
@@ -159,13 +359,28 @@ function extractImageUrl(item: CustomItem): string | null {
  * Ingest all categories
  */
 export async function ingestAllCategories(): Promise<IngestResult[]> {
-  const categories: Category[] = ['technology', 'crypto', 'ai', 'business'];
   const results: IngestResult[] = [];
 
-  for (const category of categories) {
+  // Ingest RSS-based categories
+  for (const category of RSS_CATEGORIES) {
     const result = await ingestCategory(category);
     results.push(result);
     console.log(`[Ingestion] ${category}: ${result.newItems} new, ${result.duplicates} duplicates`);
+  }
+  
+  // Ingest token launches from DEX Screener
+  const tokenResult = await ingestCategory('token_launches');
+  results.push(tokenResult);
+  
+  // Ingest DeFi alpha from DefiLlama (supplement RSS)
+  const defiResult = await ingestDefiAlpha();
+  // Merge with existing defi_alpha result
+  const existingDefiResult = results.find(r => r.category === 'defi_alpha');
+  if (existingDefiResult) {
+    existingDefiResult.totalFetched += defiResult.totalFetched;
+    existingDefiResult.newItems += defiResult.newItems;
+    existingDefiResult.duplicates += defiResult.duplicates;
+    existingDefiResult.errors.push(...defiResult.errors);
   }
 
   return results;
@@ -241,6 +456,7 @@ export async function getUnprocessedItems(category: Category, limit = 100) {
     where: {
       category,
       processed: false,
+      hiddenBySecurity: false, // Don't process hidden items
       publishedAt: {
         gte: windowStart,
       },
@@ -263,6 +479,7 @@ export async function getCandidatesForCategory(category: Category, limit = 50) {
     where: {
       category,
       processed: true,
+      hiddenBySecurity: false, // Don't show hidden items
       publishedAt: {
         gte: windowStart,
       },

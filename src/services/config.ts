@@ -1,25 +1,40 @@
 // Configuration loader service
 import sourcesConfig from '../../config/sources.json';
 import thresholdsConfig from '../../config/thresholds.json';
-import sp500Config from '../../config/sp500.json';
-import privateMajorConfig from '../../config/private_major.json';
 import type { 
   SourcesConfig, 
   CategoryThresholds, 
   ScoringWeights, 
   ScoringPenalties,
-  Company,
   Category 
 } from '@/types';
 
 // Sources configuration
 export function getSources(): SourcesConfig {
-  return sourcesConfig as SourcesConfig;
+  return sourcesConfig as unknown as SourcesConfig;
 }
 
 export function getSourcesForCategory(category: Category) {
   const sources = getSources();
   return sources[category];
+}
+
+// Get API config for a category
+export function getApiConfig(category: Category) {
+  const config = sourcesConfig as any;
+  return config[category]?.apis || null;
+}
+
+// Get chains config for token launches
+export function getSupportedChains(): string[] {
+  const config = sourcesConfig as any;
+  return config.token_launches?.chains || [];
+}
+
+// Get market data assets
+export function getMarketDataAssets() {
+  const config = sourcesConfig as any;
+  return config.marketData?.assets || [];
 }
 
 // Thresholds configuration
@@ -28,9 +43,17 @@ export function getGlobalThresholds() {
 }
 
 export function getCategoryThresholds(category: Category): CategoryThresholds {
-  const categoryKey = category.toLowerCase().replace('_', '-');
-  return thresholdsConfig.categories[category as keyof typeof thresholdsConfig.categories] || 
-    thresholdsConfig.categories.technology;
+  // Map new categories to threshold configs
+  const thresholdMap: Record<Category, keyof typeof thresholdsConfig.categories> = {
+    'defi_alpha': 'crypto' as any,
+    'token_launches': 'crypto' as any,
+    'security_alerts': 'crypto' as any,
+    'ai_frontier': 'ai' as any
+  };
+  
+  const mappedCategory = thresholdMap[category] || 'crypto';
+  return thresholdsConfig.categories[mappedCategory as keyof typeof thresholdsConfig.categories] || 
+    thresholdsConfig.categories.crypto;
 }
 
 export function getScoringWeights(): ScoringWeights {
@@ -49,84 +72,37 @@ export function getCalmSummaryConfig() {
   return thresholdsConfig.calmSummary;
 }
 
-// Company lists for business filtering
-export function getCompanyList(): Company[] {
-  const sp500Companies = sp500Config.companies as Company[];
-  const privateCompanies = privateMajorConfig.companies as Company[];
-  return [...sp500Companies, ...privateCompanies];
-}
-
-export function getCompanyNames(): Set<string> {
-  const companies = getCompanyList();
-  const names = new Set<string>();
-  
-  for (const company of companies) {
-    names.add(company.name.toLowerCase());
-    if (company.symbol) {
-      names.add(company.symbol.toLowerCase());
-    }
-    for (const alias of company.aliases) {
-      names.add(alias.toLowerCase());
-    }
-  }
-  
-  return names;
-}
-
-// Check if text mentions a major company
-export function mentionsMajorCompany(text: string): boolean {
-  const companyNames = getCompanyNames();
-  const lowerText = text.toLowerCase();
-  
-  for (const name of companyNames) {
-    // Use word boundary matching to avoid false positives
-    const regex = new RegExp(`\\b${escapeRegex(name)}\\b`, 'i');
-    if (regex.test(lowerText)) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-// Find which companies are mentioned
-export function findMentionedCompanies(text: string): Company[] {
-  const companies = getCompanyList();
-  const lowerText = text.toLowerCase();
-  const mentioned: Company[] = [];
-  
-  for (const company of companies) {
-    const namesToCheck = [company.name, ...(company.symbol ? [company.symbol] : []), ...company.aliases];
-    
-    for (const name of namesToCheck) {
-      const regex = new RegExp(`\\b${escapeRegex(name)}\\b`, 'i');
-      if (regex.test(lowerText)) {
-        mentioned.push(company);
-        break;
-      }
-    }
-  }
-  
-  return mentioned;
-}
-
-function escapeRegex(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 // Category display names
 export const CATEGORY_DISPLAY_NAMES: Record<Category, string> = {
-  technology: 'Technology',
-  crypto: 'Crypto',
-  ai: 'AI',
-  business: 'Business',
-  market_movements: 'Market Movements'
+  defi_alpha: 'DeFi Alpha',
+  token_launches: 'Token Launches',
+  security_alerts: 'Security Alerts',
+  ai_frontier: 'AI Frontier'
+};
+
+// Category icons/emojis for UI
+export const CATEGORY_ICONS: Record<Category, string> = {
+  defi_alpha: '💎',
+  token_launches: '🚀',
+  security_alerts: '🚨',
+  ai_frontier: '🤖'
 };
 
 export const ALL_CATEGORIES: Category[] = [
-  'technology',
-  'crypto',
-  'ai',
-  'business',
-  'market_movements'
+  'defi_alpha',
+  'token_launches',
+  'security_alerts',
+  'ai_frontier'
+];
+
+// RSS-based categories (ingested via RSS feeds)
+export const RSS_CATEGORIES: Category[] = [
+  'defi_alpha',
+  'security_alerts',
+  'ai_frontier'
+];
+
+// API-based categories (fetched via external APIs like DEX Screener)
+export const API_CATEGORIES: Category[] = [
+  'token_launches'
 ];
