@@ -166,3 +166,49 @@ body {
   border-color: var(--border-hover);
   background: rgba(255, 255, 255, 0.03);
 }
+
+/* Neon RGB animated source badge */
+@keyframes neon-rgb {
+  0% {
+    border-color: #ff0080;
+    box-shadow: 0 0 5px #ff0080, 0 0 10px rgba(255, 0, 128, 0.3);
+  }
+  25% {
+    border-color: #00ff80;
+    box-shadow: 0 0 5px #00ff80, 0 0 10px rgba(0, 255, 128, 0.3);
+  }
+  50% {
+    border-color: #00bfff;
+    box-shadow: 0 0 5px #00bfff, 0 0 10px rgba(0, 191, 255, 0.3);
+  }
+  75% {
+    border-color: #bf00ff;
+    box-shadow: 0 0 5px #bf00ff, 0 0 10px rgba(191, 0, 255, 0.3);
+  }
+  100% {
+    border-color: #ff0080;
+    box-shadow: 0 0 5px #ff0080, 0 0 10px rgba(255, 0, 128, 0.3);
+  }
+}
+
+.neon-source-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  animation: neon-rgb 4s linear infinite;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.neon-source-badge:hover {
+  animation-duration: 1s;
+}

@@ -105,14 +105,23 @@ function TileItemCard({
 
       {/* Meta */}
       <div className="flex items-center justify-between text-[10px]">
-        <div className="flex items-center gap-1.5 text-zinc-600">
-          <span className="truncate max-w-[100px]">{item.sourceName}</span>
+        <div className="flex items-center gap-1.5">
+          <SourceBadge name={item.sourceName} />
           <span className="text-zinc-700">·</span>
-          <span>{formatTime(item.publishedAt)}</span>
+          <span className="text-zinc-600">{formatTime(item.publishedAt)}</span>
         </div>
         <ExternalLink className="w-3 h-3 text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </button>
+  );
+}
+
+// Neon RGB source badge component
+function SourceBadge({ name }: { name: string }) {
+  return (
+    <span className="neon-source-badge">
+      {name}
+    </span>
   );
 }
 

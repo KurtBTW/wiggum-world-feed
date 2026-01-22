@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { RefreshCw, Loader2, Globe } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { TileCard } from '@/components/TileCard';
 import { ItemDrawer } from '@/components/ItemDrawer';
 import { ChatTerminal } from '@/components/ChatTerminal';
 import { LatestFeed } from '@/components/LatestFeed';
+import { HypurrPaw } from '@/components/HypurrPaw';
 import type { TileSnapshot, TileItem, Category } from '@/types';
 
 const CATEGORIES: Category[] = ['technology', 'crypto', 'ai', 'business', 'market_movements'];
@@ -114,15 +115,15 @@ export default function Home() {
         <div className="max-w-[1800px] mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#22c55e] flex items-center justify-center">
-                <Globe className="w-5 h-5 text-black" />
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#22c55e] flex items-center justify-center p-1.5">
+                <HypurrPaw className="w-full h-full text-black" />
               </div>
               <div>
-                <h1 className="text-lg font-bold gradient-text">
-                  Wiggum World Feed
+                <h1 className="text-xl font-bold gradient-text">
+                  HypurrRelevant
                 </h1>
-                <p className="text-[11px] text-zinc-500">
-                  Calm, optimistic news
+                <p className="text-[11px] text-zinc-500 tracking-wide">
+                  Forward Thinking
                 </p>
               </div>
             </div>
@@ -158,7 +159,7 @@ export default function Home() {
             {/* Hero Section */}
             <div className="text-center mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                World Changes at a Glance
+                News That Purrrrs
               </h2>
               <p className="text-sm text-zinc-500 max-w-md mx-auto">
                 Curated news filtered for optimism and forward progress. No doom, no hype.
@@ -180,8 +181,8 @@ export default function Home() {
             {/* Info Section */}
             <div className="mt-6 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01]">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#fbbf24]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-lg">?</span>
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#fbbf24]/20 to-[#22c55e]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <HypurrPaw className="w-4 h-4 text-[#fbbf24]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white mb-1">How it works</h3>

@@ -123,7 +123,7 @@ function LatestItemCard({
 
       {/* Meta */}
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-zinc-600 truncate max-w-[140px]">{item.sourceName}</span>
+        <span className="neon-source-badge">{item.sourceName}</span>
         <ExternalLink className="w-3 h-3 text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </button>
