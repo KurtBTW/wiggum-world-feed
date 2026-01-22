@@ -2,17 +2,16 @@
 
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { X, ExternalLink, Sparkles, Loader2, ArrowUpRight } from 'lucide-react';
+import { X, Sparkles, ArrowUpRight } from 'lucide-react';
 import type { TileItem } from '@/types';
 
 interface ItemDrawerProps {
   item: TileItem | null;
   onClose: () => void;
-  onExplain: (itemId: string) => Promise<void>;
-  isExplaining: boolean;
+  onExplain: () => void;
 }
 
-export function ItemDrawer({ item, onClose, onExplain, isExplaining }: ItemDrawerProps) {
+export function ItemDrawer({ item, onClose, onExplain }: ItemDrawerProps) {
   if (!item) return null;
 
   const nyTime = toZonedTime(new Date(item.publishedAt), 'America/New_York');
@@ -34,7 +33,7 @@ export function ItemDrawer({ item, onClose, onExplain, isExplaining }: ItemDrawe
               {item.calmHeadline}
             </h2>
             <div className="flex items-center gap-2 text-xs text-zinc-500">
-              <span className="font-medium text-zinc-400">{item.sourceName}</span>
+              <span className="neon-source-badge">{item.sourceName}</span>
               <span>·</span>
               <span>{format(nyTime, 'MMM d, yyyy · h:mm a')} ET</span>
             </div>
@@ -90,21 +89,11 @@ export function ItemDrawer({ item, onClose, onExplain, isExplaining }: ItemDrawe
         {/* Actions */}
         <div className="p-5 border-t border-white/[0.06] bg-white/[0.01]">
           <button
-            onClick={() => onExplain(item.id)}
-            disabled={isExplaining}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed gradient-border bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 text-white"
+            onClick={onExplain}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all gradient-border bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 text-white"
           >
-            {isExplaining ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Analyzing...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 text-[#fbbf24]" />
-                <span>Explain with GPT-5.2</span>
-              </>
-            )}
+            <Sparkles className="w-4 h-4 text-[#fbbf24]" />
+            <span>Summarize with GPT-5.2</span>
           </button>
         </div>
       </div>

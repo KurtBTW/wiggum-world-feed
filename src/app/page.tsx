@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshCw, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { TileCard } from '@/components/TileCard';
 import { ItemDrawer } from '@/components/ItemDrawer';
-import { ChatTerminal } from '@/components/ChatTerminal';
+import { ChatTerminal, ChatTerminalHandle } from '@/components/ChatTerminal';
 import { LatestFeed } from '@/components/LatestFeed';
 import { HypurrPaw } from '@/components/HypurrPaw';
 import type { TileSnapshot, TileItem, Category } from '@/types';
@@ -18,8 +19,8 @@ export default function Home() {
   const [boundItem, setBoundItem] = useState<TileItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isExplaining, setIsExplaining] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const chatRef = useRef<ChatTerminalHandle>(null);
   const [sessionId] = useState(() => 
     typeof window !== 'undefined' 
       ? localStorage.getItem('chatSessionId') || uuidv4()
@@ -74,25 +75,11 @@ export default function Home() {
     setBoundItem(item);
   };
 
-  const handleExplain = async (itemId: string) => {
-    setIsExplaining(true);
-    try {
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          message: '',
-          boundItemId: itemId,
-          action: 'explain'
-        })
-      });
-      setSelectedItem(null);
-    } catch (error) {
-      console.error('Failed to explain item:', error);
-    } finally {
-      setIsExplaining(false);
-    }
+  const handleExplain = async (item: TileItem) => {
+    // Close the drawer and open chat with explanation
+    setSelectedItem(null);
+    setBoundItem(item);
+    chatRef.current?.openAndExplain(item);
   };
 
   if (isLoading) {
@@ -112,17 +99,22 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0a0a0a]/80 backdrop-blur-md">
-        <div className="max-w-[1800px] mx-auto px-4 py-4">
+        <div className="max-w-[1800px] mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#22c55e] flex items-center justify-center p-1.5">
-                <HypurrPaw className="w-full h-full text-black" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold gradient-text">
-                  HypurrRelevant
+              <Image
+                src="/hypurrfi-logo.png"
+                alt="HypurrFi"
+                width={140}
+                height={40}
+                className="h-10 w-auto"
+                priority
+              />
+              <div className="hidden sm:block border-l border-white/[0.1] pl-3 ml-1">
+                <h1 className="text-sm font-semibold gradient-text">
+                  Relevant
                 </h1>
-                <p className="text-[11px] text-zinc-500 tracking-wide">
+                <p className="text-[10px] text-zinc-500 tracking-wide">
                   Forward Thinking
                 </p>
               </div>
@@ -213,13 +205,13 @@ export default function Home() {
         <ItemDrawer
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
-          onExplain={handleExplain}
-          isExplaining={isExplaining}
+          onExplain={() => handleExplain(selectedItem)}
         />
       )}
 
       {/* Floating Chat Terminal */}
       <ChatTerminal
+        ref={chatRef}
         sessionId={sessionId}
         boundItem={boundItem}
         onClearBoundItem={() => setBoundItem(null)}
