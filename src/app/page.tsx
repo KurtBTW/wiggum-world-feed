@@ -186,9 +186,20 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Image Placeholder */}
+                  {/* Featured Image */}
                   <div className="w-[400px] h-[280px] rounded-2xl bg-gradient-to-br from-[#fbbf24]/20 to-[#22c55e]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <div className="text-center">
+                    {featuredItem.imageUrl ? (
+                      <img 
+                        src={featuredItem.imageUrl} 
+                        alt={featuredItem.calmHeadline}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`text-center ${featuredItem.imageUrl ? 'hidden' : ''}`}>
                       <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#22c55e] flex items-center justify-center">
                         <span className="text-2xl font-bold text-black">
                           {getCategoryEmoji(featuredItem.category)}
@@ -214,9 +225,20 @@ export default function Home() {
                   className="cursor-pointer group"
                   onClick={() => setSelectedItem(item)}
                 >
-                  {/* Image Placeholder */}
+                  {/* Card Image */}
                   <div className="aspect-[4/3] rounded-xl bg-gradient-to-br from-white/[0.03] to-white/[0.06] mb-4 flex items-center justify-center overflow-hidden group-hover:from-[#fbbf24]/10 group-hover:to-[#22c55e]/10 transition-all">
-                    <div className="text-center">
+                    {item.imageUrl ? (
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.calmHeadline}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`text-center ${item.imageUrl ? 'hidden' : ''}`}>
                       <span className="text-3xl">
                         {getCategoryEmoji(item.category)}
                       </span>

@@ -4,10 +4,34 @@ import { prisma } from '@/lib/prisma';
 import { getSourcesForCategory, getGlobalThresholds } from './config';
 import type { Category, RSSFeedItem, Source } from '@/types';
 
-const parser = new Parser({
+// Custom RSS parser with media support
+type CustomFeed = { items: CustomItem[] };
+type CustomItem = {
+  title?: string;
+  link?: string;
+  pubDate?: string;
+  content?: string;
+  contentSnippet?: string;
+  creator?: string;
+  isoDate?: string;
+  enclosure?: { url?: string; type?: string };
+  'media:content'?: { $?: { url?: string } };
+  'media:thumbnail'?: { $?: { url?: string } };
+  'content:encoded'?: string;
+};
+
+const parser: Parser<CustomFeed, CustomItem> = new Parser({
   timeout: 10000,
   headers: {
-    'User-Agent': 'WiggumWorldFeed/1.0 (RSS Reader)',
+    'User-Agent': 'HypurrRelevant/1.0 (RSS Reader)',
+  },
+  customFields: {
+    item: [
+      ['media:content', 'media:content'],
+      ['media:thumbnail', 'media:thumbnail'],
+      ['content:encoded', 'content:encoded'],
+      ['enclosure', 'enclosure'],
+    ],
   },
 });
 
@@ -61,6 +85,9 @@ export async function ingestCategory(category: Category): Promise<IngestResult> 
           continue;
         }
 
+        // Extract image URL from various RSS fields
+        const imageUrl = extractImageUrl(item);
+
         // Create new item
         try {
           await prisma.ingestedItem.create({
@@ -69,6 +96,7 @@ export async function ingestCategory(category: Category): Promise<IngestResult> 
               originalTitle: item.title,
               url: item.link,
               canonicalUrl: extractCanonicalUrl(item.link),
+              imageUrl,
               source: source.url,
               sourceName: source.name,
               category: category,
@@ -93,6 +121,41 @@ export async function ingestCategory(category: Category): Promise<IngestResult> 
 }
 
 /**
+ * Extract image URL from RSS item
+ */
+function extractImageUrl(item: CustomItem): string | null {
+  // Try enclosure first (common for podcasts and news)
+  if (item.enclosure?.url && item.enclosure.type?.startsWith('image/')) {
+    return item.enclosure.url;
+  }
+  
+  // Try media:content
+  if (item['media:content']?.$?.url) {
+    return item['media:content'].$.url;
+  }
+  
+  // Try media:thumbnail
+  if (item['media:thumbnail']?.$?.url) {
+    return item['media:thumbnail'].$.url;
+  }
+  
+  // Try to extract from content:encoded or content
+  const content = item['content:encoded'] || item.content || '';
+  const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch && imgMatch[1]) {
+    return imgMatch[1];
+  }
+  
+  // Try og:image pattern in content
+  const ogMatch = content.match(/og:image["'][^>]+content=["']([^"']+)["']/i);
+  if (ogMatch && ogMatch[1]) {
+    return ogMatch[1];
+  }
+  
+  return null;
+}
+
+/**
  * Ingest all categories
  */
 export async function ingestAllCategories(): Promise<IngestResult[]> {
@@ -111,10 +174,10 @@ export async function ingestAllCategories(): Promise<IngestResult[]> {
 /**
  * Fetch items from an RSS feed
  */
-async function fetchRSSFeed(source: Source): Promise<RSSFeedItem[]> {
+async function fetchRSSFeed(source: Source): Promise<CustomItem[]> {
   try {
     const feed = await parser.parseURL(source.url);
-    return feed.items as RSSFeedItem[];
+    return feed.items;
   } catch (error) {
     console.error(`[RSS Error] ${source.name}: ${error}`);
     return [];

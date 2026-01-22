@@ -197,6 +197,7 @@ function transformSnapshot(prismaSnapshot: any): TileSnapshot {
       source: item.ingestedItem.source,
       sourceName: item.ingestedItem.sourceName,
       url: item.ingestedItem.url,
+      imageUrl: item.ingestedItem.imageUrl || undefined,
       publishedAt: item.ingestedItem.publishedAt,
       excerpt: item.ingestedItem.excerpt || undefined
     }))
@@ -227,6 +228,7 @@ export async function getItemById(itemId: string) {
       source: tileItem.ingestedItem.source,
       sourceName: tileItem.ingestedItem.sourceName,
       url: tileItem.ingestedItem.url,
+      imageUrl: tileItem.ingestedItem.imageUrl || undefined,
       publishedAt: tileItem.ingestedItem.publishedAt,
       excerpt: tileItem.ingestedItem.excerpt || undefined
     },

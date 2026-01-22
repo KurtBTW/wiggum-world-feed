@@ -129,6 +129,7 @@ export interface TileItem {
   source: string;
   sourceName: string;
   url: string;
+  imageUrl?: string;
   publishedAt: Date;
   excerpt?: string;
 }

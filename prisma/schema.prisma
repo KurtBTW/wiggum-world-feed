@@ -18,6 +18,7 @@ model IngestedItem {
   originalTitle String
   url           String   @unique
   canonicalUrl  String?
+  imageUrl      String?
   source        String
   sourceName    String
   category      String
