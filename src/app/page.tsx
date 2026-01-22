@@ -29,18 +29,18 @@ const TICKER_ASSETS = [
   { symbol: 'COPPER', name: 'Copper', yahooSymbol: 'HG=F' },
 ];
 
-// HyperEVM Protocols
+// HyperEVM Protocols - URLs to be provided
 const HYPEREVM_PROTOCOLS = [
-  { name: 'HypurrFi', url: 'https://app.hypurr.fi', description: 'Trade & Earn' },
-  { name: 'HyperSwap', url: 'https://app.hyperswap.exchange', description: 'DEX' },
-  { name: 'PRJX', url: 'https://prjx.io', description: 'Launchpad' },
-  { name: 'Kinetiq', url: 'https://kinetiq.xyz', description: 'Perps' },
-  { name: 'HyperLend', url: 'https://hyperlend.finance', description: 'Lending' },
-  { name: 'Felix', url: 'https://usefelix.xyz', description: 'Stablecoin' },
-  { name: 'Liminal', url: 'https://liminal.money', description: 'Yield' },
-  { name: 'HyperWave', url: 'https://hyperwave.xyz', description: 'Analytics' },
-  { name: 'HyperUnit', url: 'https://hyperunit.xyz', description: 'Index' },
-  { name: 'Hyperliquid', url: 'https://app.hyperliquid.xyz', description: 'L1 DEX' },
+  { name: 'HypurrFi', url: '', description: 'Trade & Earn' },
+  { name: 'HyperSwap', url: '', description: 'DEX' },
+  { name: 'PRJX', url: '', description: 'Launchpad' },
+  { name: 'Kinetiq', url: '', description: 'Perps' },
+  { name: 'HyperLend', url: '', description: 'Lending' },
+  { name: 'Felix', url: '', description: 'Stablecoin' },
+  { name: 'Liminal', url: '', description: 'Yield' },
+  { name: 'HyperWave', url: '', description: 'Analytics' },
+  { name: 'HyperUnit', url: '', description: 'Index' },
+  { name: 'Hyperliquid', url: '', description: 'L1 DEX' },
 ];
 
 // Keywords that indicate major news for HypurrFi users
@@ -374,29 +374,27 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 {HYPEREVM_PROTOCOLS.map((protocol) => (
-                  <a
-                    key={protocol.name}
-                    href={protocol.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between py-2 px-2 -mx-2 rounded text-sm text-zinc-400 hover:text-[#50e2c3] hover:bg-white/[0.03] transition-all group"
-                  >
-                    <span className="font-medium">{protocol.name}</span>
-                    <span className="text-xs text-zinc-600 group-hover:text-zinc-500">{protocol.description}</span>
-                  </a>
+                  protocol.url ? (
+                    <a
+                      key={protocol.name}
+                      href={protocol.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between py-2 px-2 -mx-2 rounded text-sm text-zinc-400 hover:text-[#50e2c3] hover:bg-white/[0.03] transition-all group"
+                    >
+                      <span className="font-medium">{protocol.name}</span>
+                      <span className="text-xs text-zinc-600 group-hover:text-zinc-500">{protocol.description}</span>
+                    </a>
+                  ) : (
+                    <div
+                      key={protocol.name}
+                      className="flex items-center justify-between py-2 px-2 -mx-2 rounded text-sm text-zinc-400"
+                    >
+                      <span className="font-medium">{protocol.name}</span>
+                      <span className="text-xs text-zinc-600">{protocol.description}</span>
+                    </div>
+                  )
                 ))}
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-white/[0.06]">
-                <a
-                  href="https://hyperliquid.xyz"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-zinc-500 hover:text-[#50e2c3] transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Hyperliquid L1
-                </a>
               </div>
             </div>
           </aside>
