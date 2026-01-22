@@ -5,6 +5,7 @@ import { RefreshCw, Loader2, ExternalLink, ChevronRight, TrendingUp, TrendingDow
 import Image from 'next/image';
 import { ArticleSummary } from '@/components/ArticleSummary';
 import { ChatWidget } from '@/components/ChatWidget';
+import { Watchlist } from '@/components/Watchlist';
 import type { TileSnapshot, TileItem, Category } from '@/types';
 
 // HypurrFi brand color
@@ -384,6 +385,9 @@ export default function Home() {
                   </a>
                 ))}
               </div>
+
+              {/* Watchlist */}
+              <Watchlist />
             </div>
           </aside>
 
