@@ -32,13 +32,15 @@ const TICKER_ASSETS = [
 // HyperEVM Protocols
 const HYPEREVM_PROTOCOLS = [
   { name: 'HypurrFi', url: 'https://app.hypurr.fi', description: 'Trade & Earn' },
-  { name: 'HyperSwap', url: 'https://hyperswap.fi', description: 'DEX' },
-  { name: 'Kinetix', url: 'https://kinetix.finance', description: 'Perps DEX' },
+  { name: 'HyperSwap', url: 'https://app.hyperswap.exchange', description: 'DEX' },
+  { name: 'PRJX', url: 'https://prjx.io', description: 'Launchpad' },
+  { name: 'Kinetiq', url: 'https://kinetiq.xyz', description: 'Perps' },
   { name: 'HyperLend', url: 'https://hyperlend.finance', description: 'Lending' },
-  { name: 'Felix', url: 'https://felix.finance', description: 'Stablecoin' },
-  { name: 'Timeswap', url: 'https://timeswap.io', description: 'Options' },
-  { name: 'Laminar', url: 'https://laminar.markets', description: 'Yield' },
+  { name: 'Felix', url: 'https://usefelix.xyz', description: 'Stablecoin' },
+  { name: 'Liminal', url: 'https://liminal.money', description: 'Yield' },
+  { name: 'HyperWave', url: 'https://hyperwave.xyz', description: 'Analytics' },
   { name: 'HyperUnit', url: 'https://hyperunit.xyz', description: 'Index' },
+  { name: 'Hyperliquid', url: 'https://app.hyperliquid.xyz', description: 'L1 DEX' },
 ];
 
 // Keywords that indicate major news for HypurrFi users
