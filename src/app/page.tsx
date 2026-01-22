@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Loader2, ExternalLink, ChevronRight } from 'lucide-react';
+import { RefreshCw, Loader2, ExternalLink, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import Image from 'next/image';
 import { ArticleSummary } from '@/components/ArticleSummary';
 import { ChatWidget } from '@/components/ChatWidget';
@@ -17,6 +17,30 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'ai_frontier', label: 'AI Frontier' },
 ];
 
+// Assets for the ticker
+const TICKER_ASSETS = [
+  { symbol: 'HYPE', name: 'Hyperliquid', coingeckoId: 'hyperliquid' },
+  { symbol: 'BTC', name: 'Bitcoin', coingeckoId: 'bitcoin' },
+  { symbol: 'ETH', name: 'Ethereum', coingeckoId: 'ethereum' },
+  { symbol: 'XMR', name: 'Monero', coingeckoId: 'monero' },
+  { symbol: 'GOLD', name: 'Gold', yahooSymbol: 'GC=F' },
+  { symbol: 'SILVER', name: 'Silver', yahooSymbol: 'SI=F' },
+  { symbol: 'URANIUM', name: 'Uranium', yahooSymbol: 'URA' },
+  { symbol: 'COPPER', name: 'Copper', yahooSymbol: 'HG=F' },
+];
+
+// HyperEVM Protocols
+const HYPEREVM_PROTOCOLS = [
+  { name: 'HypurrFi', url: 'https://app.hypurr.fi', description: 'Trade & Earn' },
+  { name: 'HyperSwap', url: 'https://hyperswap.fi', description: 'DEX' },
+  { name: 'Kinetix', url: 'https://kinetix.finance', description: 'Perps DEX' },
+  { name: 'HyperLend', url: 'https://hyperlend.finance', description: 'Lending' },
+  { name: 'Felix', url: 'https://felix.finance', description: 'Stablecoin' },
+  { name: 'Timeswap', url: 'https://timeswap.io', description: 'Options' },
+  { name: 'Laminar', url: 'https://laminar.markets', description: 'Yield' },
+  { name: 'HyperUnit', url: 'https://hyperunit.xyz', description: 'Index' },
+];
+
 // Keywords that indicate major news for HypurrFi users
 const MAJOR_NEWS_KEYWORDS = [
   'hyperliquid', 'hype', 'bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'sol',
@@ -25,6 +49,13 @@ const MAJOR_NEWS_KEYWORDS = [
   'sec', 'etf', 'approval', 'blackrock', 'record', 'all-time'
 ];
 
+interface TickerPrice {
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+}
+
 export default function Home() {
   const [tiles, setTiles] = useState<Record<Category, TileSnapshot | null>>({} as Record<Category, TileSnapshot | null>);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
@@ -32,11 +63,17 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [tickerPrices, setTickerPrices] = useState<TickerPrice[]>([]);
 
   useEffect(() => {
     fetchTiles();
-    const interval = setInterval(fetchTiles, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    fetchTickerPrices();
+    const tilesInterval = setInterval(fetchTiles, 5 * 60 * 1000);
+    const tickerInterval = setInterval(fetchTickerPrices, 60 * 1000); // Update prices every minute
+    return () => {
+      clearInterval(tilesInterval);
+      clearInterval(tickerInterval);
+    };
   }, []);
 
   const fetchTiles = useCallback(async () => {
@@ -53,6 +90,53 @@ export default function Home() {
       setIsLoading(false);
     }
   }, []);
+
+  const fetchTickerPrices = async () => {
+    try {
+      // Fetch crypto prices from CoinGecko
+      const cryptoIds = TICKER_ASSETS.filter(a => a.coingeckoId).map(a => a.coingeckoId).join(',');
+      const cryptoRes = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`
+      );
+      const cryptoData = await cryptoRes.json();
+
+      const prices: TickerPrice[] = TICKER_ASSETS.map(asset => {
+        if (asset.coingeckoId && cryptoData[asset.coingeckoId]) {
+          return {
+            symbol: asset.symbol,
+            name: asset.name,
+            price: cryptoData[asset.coingeckoId].usd,
+            change24h: cryptoData[asset.coingeckoId].usd_24h_change || 0,
+          };
+        }
+        // Fallback prices for commodities (would need a real API in production)
+        const commodityPrices: Record<string, { price: number; change: number }> = {
+          'GOLD': { price: 2756.40, change: 0.45 },
+          'SILVER': { price: 30.82, change: 1.23 },
+          'URANIUM': { price: 23.45, change: -0.87 },
+          'COPPER': { price: 4.12, change: 0.32 },
+        };
+        const commodity = commodityPrices[asset.symbol];
+        return {
+          symbol: asset.symbol,
+          name: asset.name,
+          price: commodity?.price || 0,
+          change24h: commodity?.change || 0,
+        };
+      });
+
+      setTickerPrices(prices);
+    } catch (error) {
+      console.error('Failed to fetch ticker prices:', error);
+      // Set fallback prices on error
+      setTickerPrices(TICKER_ASSETS.map(asset => ({
+        symbol: asset.symbol,
+        name: asset.name,
+        price: 0,
+        change24h: 0,
+      })));
+    }
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -142,7 +226,7 @@ export default function Home() {
   const getLatestItems = (): (TileItem & { category: Category })[] => {
     return getAllItems()
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 10);
+      .slice(0, 8);
   };
 
   const heroStory = selectedCategory === 'all' ? getHeroStory() : null;
@@ -166,7 +250,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
       <header className="border-b border-white/[0.08]">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="max-w-[1400px] mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Left - HypurrFi Logo */}
             <div className="flex items-center gap-3">
@@ -213,7 +297,7 @@ export default function Home() {
 
       {/* Navigation Tabs */}
       <nav className="border-b border-white/[0.08] bg-[#0f0f0f]">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center justify-between">
             <div className="flex">
               <button
@@ -257,9 +341,64 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* Price Ticker */}
+      <div className="bg-[#0a0a0a] border-b border-white/[0.06] overflow-hidden">
+        <div className="ticker-wrapper">
+          <div className="ticker-content">
+            {[...tickerPrices, ...tickerPrices].map((asset, index) => (
+              <div key={`${asset.symbol}-${index}`} className="ticker-item">
+                <span className="text-zinc-400 font-medium">{asset.symbol}</span>
+                <span className="text-white font-mono ml-2">
+                  ${asset.price > 1000 ? asset.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className={`ml-2 text-xs font-medium flex items-center gap-0.5 ${asset.change24h >= 0 ? 'text-[#50e2c3]' : 'text-red-500'}`}>
+                  {asset.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {asset.change24h >= 0 ? '+' : ''}{asset.change24h.toFixed(2)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex gap-8">
+      <main className="max-w-[1400px] mx-auto px-4 py-6">
+        <div className="flex gap-6">
+          {/* Left Sidebar - HyperEVM Protocols */}
+          <aside className="w-48 flex-shrink-0 hidden xl:block">
+            <div className="sticky top-4">
+              <div className="border-b-2 border-[#50e2c3] pb-2 mb-4">
+                <h3 className="text-sm font-bold text-white">HyperEVM</h3>
+              </div>
+              <div className="space-y-1">
+                {HYPEREVM_PROTOCOLS.map((protocol) => (
+                  <a
+                    key={protocol.name}
+                    href={protocol.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between py-2 px-2 -mx-2 rounded text-sm text-zinc-400 hover:text-[#50e2c3] hover:bg-white/[0.03] transition-all group"
+                  >
+                    <span className="font-medium">{protocol.name}</span>
+                    <span className="text-xs text-zinc-600 group-hover:text-zinc-500">{protocol.description}</span>
+                  </a>
+                ))}
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-white/[0.06]">
+                <a
+                  href="https://hyperliquid.xyz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-zinc-500 hover:text-[#50e2c3] transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Hyperliquid L1
+                </a>
+              </div>
+            </div>
+          </aside>
+
           {/* Main Feed */}
           <div className="flex-1 min-w-0">
             {/* Hero Story */}
@@ -276,7 +415,7 @@ export default function Home() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#50e2c3]/20 to-[#50e2c3]/20" />
+                    <div className="w-full h-full bg-gradient-to-br from-[#50e2c3]/20 to-[#50e2c3]/5" />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -316,15 +455,14 @@ export default function Home() {
             )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="w-80 flex-shrink-0 hidden lg:block">
-            {/* Latest Section */}
+          {/* Right Sidebar - Latest */}
+          <aside className="w-72 flex-shrink-0 hidden lg:block">
             <div className="sticky top-4">
               <div className="border-b-2 border-[#50e2c3] pb-2 mb-4">
                 <h3 className="text-lg font-bold text-white">Latest</h3>
               </div>
               <div className="space-y-0">
-                {latestItems.map((item, index) => (
+                {latestItems.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedItem(item)}
@@ -348,29 +486,11 @@ export default function Home() {
               </div>
               
               {/* Quick Links */}
-              <div className="mt-8 p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
-                <h4 className="text-sm font-semibold text-white mb-3">Quick Links</h4>
+              <div className="mt-6 p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+                <h4 className="text-sm font-semibold text-white mb-3">Resources</h4>
                 <div className="space-y-2">
                   <a
-                    href="https://app.hypurr.fi"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
-                  >
-                    <span>Trade on HypurrFi</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </a>
-                  <a
-                    href="https://hyperliquid.xyz"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
-                  >
-                    <span>Hyperliquid</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </a>
-                  <a
-                    href="https://dexscreener.com"
+                    href="https://dexscreener.com/hyperliquid"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
@@ -379,12 +499,21 @@ export default function Home() {
                     <ChevronRight className="w-4 h-4" />
                   </a>
                   <a
-                    href="https://defillama.com"
+                    href="https://defillama.com/chain/Hyperliquid"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
                   >
                     <span>DefiLlama</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="https://stats.hyperliquid.xyz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors"
+                  >
+                    <span>HL Stats</span>
                     <ChevronRight className="w-4 h-4" />
                   </a>
                 </div>
@@ -396,7 +525,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-white/[0.06] mt-12 py-8">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center justify-between text-sm text-zinc-500">
             <div className="flex items-center gap-4">
               <span className="font-medium text-zinc-400">HypurrRelevant</span>
@@ -427,6 +556,37 @@ export default function Home() {
 
       {/* Chat Widget */}
       <ChatWidget />
+
+      {/* Ticker Animation Styles */}
+      <style jsx>{`
+        .ticker-wrapper {
+          width: 100%;
+          overflow: hidden;
+        }
+        .ticker-content {
+          display: flex;
+          animation: ticker 40s linear infinite;
+          width: fit-content;
+        }
+        .ticker-content:hover {
+          animation-play-state: paused;
+        }
+        .ticker-item {
+          display: flex;
+          align-items: center;
+          padding: 8px 24px;
+          white-space: nowrap;
+          font-size: 13px;
+        }
+        @keyframes ticker {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 }
