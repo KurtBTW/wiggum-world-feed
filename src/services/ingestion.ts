@@ -96,7 +96,16 @@ export async function ingestCategory(category: Category): Promise<IngestResult> 
         }
 
         // Extract image URL from various RSS fields
-        const imageUrl = extractImageUrl(item);
+        let imageUrl = extractImageUrl(item);
+        
+        // If no image found in RSS, scrape the article page
+        if (!imageUrl && item.link) {
+          console.log(`[Ingestion] No image in RSS for "${item.title?.slice(0, 50)}...", scraping article...`);
+          imageUrl = await scrapeImageFromUrl(item.link);
+          if (imageUrl) {
+            console.log(`[Ingestion] Found image from article: ${imageUrl.slice(0, 80)}...`);
+          }
+        }
 
         // Create new item
         try {
@@ -356,6 +365,102 @@ function extractImageUrl(item: CustomItem): string | null {
 }
 
 /**
+ * Scrape image from article URL if not found in feed
+ */
+async function scrapeImageFromUrl(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; HypurrRelevancy/1.0; +https://hypurrrelevancy.vercel.app)',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const html = await response.text();
+    
+    // Try og:image first (most reliable for article images)
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                         html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (ogImageMatch && ogImageMatch[1]) {
+      return resolveUrl(ogImageMatch[1], url);
+    }
+    
+    // Try twitter:image
+    const twitterImageMatch = html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+                              html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
+    if (twitterImageMatch && twitterImageMatch[1]) {
+      return resolveUrl(twitterImageMatch[1], url);
+    }
+    
+    // Try to find first large image in article content
+    // Look for images in article, main, or content areas
+    const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
+                         html.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
+                         html.match(/<div[^>]+class=["'][^"']*content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+    
+    const searchArea = articleMatch ? articleMatch[1] : html;
+    
+    // Find all img tags and get the first one with a reasonable src
+    const imgMatches = searchArea.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
+    for (const match of imgMatches) {
+      const src = match[1];
+      // Skip tiny images, icons, avatars, tracking pixels
+      if (src && 
+          !src.includes('avatar') && 
+          !src.includes('icon') && 
+          !src.includes('logo') &&
+          !src.includes('pixel') &&
+          !src.includes('1x1') &&
+          !src.includes('spacer') &&
+          !src.includes('tracking') &&
+          !src.includes('badge') &&
+          !src.endsWith('.svg') &&
+          !src.endsWith('.gif')) {
+        return resolveUrl(src, url);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.log(`[Image Scrape] Failed for ${url}: ${error instanceof Error ? error.message : 'Unknown'}`);
+    return null;
+  }
+}
+
+/**
+ * Resolve relative URLs to absolute
+ */
+function resolveUrl(imageUrl: string, pageUrl: string): string {
+  try {
+    // Already absolute
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    
+    // Protocol-relative
+    if (imageUrl.startsWith('//')) {
+      return 'https:' + imageUrl;
+    }
+    
+    // Relative URL - resolve against page URL
+    const base = new URL(pageUrl);
+    return new URL(imageUrl, base).toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
+/**
  * Ingest all categories
  */
 export async function ingestAllCategories(): Promise<IngestResult[]> {
@@ -506,3 +611,50 @@ export async function markItemsProcessed(ids: string[]) {
     },
   });
 }
+
+/**
+ * Backfill images for items that don't have them
+ */
+export async function backfillMissingImages(limit = 20): Promise<number> {
+  // Find recent items without images
+  const itemsWithoutImages = await prisma.ingestedItem.findMany({
+    where: {
+      imageUrl: null,
+    },
+    orderBy: {
+      publishedAt: 'desc',
+    },
+    take: limit * 2, // Get extra since some may not have URLs
+  });
+  
+  let updated = 0;
+  let processed = 0;
+  
+  for (const item of itemsWithoutImages) {
+    // Skip if we've processed enough
+    if (processed >= limit) break;
+    
+    // Skip items without URLs
+    if (!item.url) continue;
+    
+    processed++;
+    
+    const imageUrl = await scrapeImageFromUrl(item.url);
+    if (imageUrl) {
+      await prisma.ingestedItem.update({
+        where: { id: item.id },
+        data: { imageUrl },
+      });
+      updated++;
+      console.log(`[Backfill] Found image for "${item.title?.slice(0, 40)}..."`);
+    }
+  }
+  
+  console.log(`[Backfill] Updated ${updated}/${processed} items with images`);
+  return updated;
+}
+
+/**
+ * Export the image scraper for use in other services
+ */
+export { scrapeImageFromUrl };

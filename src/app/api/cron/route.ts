@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { updateAllTiles } from '@/services/tiles';
 import { refreshMarketData } from '@/services/market-data';
+import { backfillMissingImages } from '@/services/ingestion';
 
 export async function GET(request: Request) {
   // Verify cron secret in production
@@ -21,6 +22,9 @@ export async function GET(request: Request) {
     // Refresh market data
     const marketData = await refreshMarketData();
     
+    // Backfill missing images (scrape article pages)
+    const imagesBackfilled = await backfillMissingImages(10);
+    
     const summary = {
       timestamp: new Date().toISOString(),
       tiles: Object.entries(tiles).map(([category, snapshot]) => ({
@@ -32,7 +36,8 @@ export async function GET(request: Request) {
         symbol: d.symbol,
         price: d.price.toFixed(2),
         change24h: d.change24h.toFixed(2) + '%'
-      }))
+      })),
+      imagesBackfilled
     };
 
     console.log(`[Cron] Update completed:`, summary);
