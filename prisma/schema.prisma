@@ -36,6 +36,10 @@ model IngestedItem {
   topicFitScore        Float @default(0)
   totalScore           Float @default(0)
   
+  // Relevancy score (0-100) - how relevant to HypurrFi users
+  relevancyScore       Int?
+  relevancyReason      String? // Brief explanation of the score
+  
   // Token-specific fields (for token_launches category)
   chainId       String?  // solana, ethereum, base, etc.
   tokenAddress  String?

@@ -6,6 +6,7 @@ import {
   getCategoryThresholds,
   getSourcesForCategory
 } from './config';
+import { scoreRelevancy } from './relevancy';
 import type { Category, ItemScores, IngestedItemWithScores } from '@/types';
 
 // Sensationalism indicators (penalize these)
@@ -199,10 +200,29 @@ export async function scoreUnprocessedItems(category: Category): Promise<number>
       category as Category
     );
     
+    // Get relevancy score from GPT
+    let relevancyScore: number | null = null;
+    let relevancyReason: string | null = null;
+    
+    try {
+      const relevancy = await scoreRelevancy(
+        item.title,
+        item.excerpt,
+        category as Category,
+        item.sourceName
+      );
+      relevancyScore = relevancy.score;
+      relevancyReason = relevancy.reason;
+    } catch (error) {
+      console.error(`[Scoring] Failed to get relevancy score for ${item.id}:`, error);
+    }
+    
     await prisma.ingestedItem.update({
       where: { id: item.id },
       data: {
         processed: true,
+        relevancyScore,
+        relevancyReason,
         ...scores
       }
     });

@@ -66,6 +66,9 @@ export async function GET(
         tvl: true,
         tvlChange24h: true,
         apy: true,
+        // Relevancy score
+        relevancyScore: true,
+        relevancyReason: true,
         // Check if already in a tile
         selectedForTile: true,
         // Get calm versions if they exist
@@ -106,6 +109,9 @@ export async function GET(
       tvl: item.tvl || undefined,
       tvlChange24h: item.tvlChange24h || undefined,
       apy: item.apy || undefined,
+      // Relevancy score
+      relevancyScore: item.relevancyScore || undefined,
+      relevancyReason: item.relevancyReason || undefined,
       // Extra info
       isTopStory: item.selectedForTile
     }));

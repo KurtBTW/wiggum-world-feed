@@ -204,7 +204,10 @@ function transformSnapshot(prismaSnapshot: any): TileSnapshot {
       // DeFi-specific fields
       tvl: item.ingestedItem.tvl || undefined,
       tvlChange24h: item.ingestedItem.tvlChange24h || undefined,
-      apy: item.ingestedItem.apy || undefined
+      apy: item.ingestedItem.apy || undefined,
+      // Relevancy score
+      relevancyScore: item.ingestedItem.relevancyScore || undefined,
+      relevancyReason: item.ingestedItem.relevancyReason || undefined
     }))
   };
 }

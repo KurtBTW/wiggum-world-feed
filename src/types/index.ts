@@ -286,6 +286,9 @@ export interface TileItem {
   tvl?: number;
   tvlChange24h?: number;
   apy?: number;
+  // Relevancy score
+  relevancyScore?: number;
+  relevancyReason?: string;
 }
 
 export interface TileSnapshot {

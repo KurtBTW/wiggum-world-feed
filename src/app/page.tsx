@@ -452,9 +452,25 @@ export default function Home() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#50e2c3] text-black mb-3">
-                      {getCategoryLabel(heroStory.category)}
-                    </span>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#50e2c3] text-black">
+                        {getCategoryLabel(heroStory.category)}
+                      </span>
+                      {heroStory.relevancyScore !== undefined && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-black/50">
+                          <div className="w-16 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full"
+                              style={{ 
+                                width: `${heroStory.relevancyScore}%`,
+                                backgroundColor: heroStory.relevancyScore >= 80 ? '#50e2c3' : heroStory.relevancyScore >= 60 ? '#84cc16' : heroStory.relevancyScore >= 40 ? '#eab308' : '#f97316'
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs text-white/80">{heroStory.relevancyScore}</span>
+                        </div>
+                      )}
+                    </div>
                     <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#50e2c3] transition-colors">
                       {heroStory.calmHeadline}
                     </h2>
@@ -640,6 +656,51 @@ export default function Home() {
   );
 }
 
+function RelevancyMeter({ score, reason }: { score?: number; reason?: string }) {
+  if (score === undefined || score === null) return null;
+  
+  const getColor = () => {
+    if (score >= 80) return '#50e2c3'; // Teal - highly relevant
+    if (score >= 60) return '#84cc16'; // Lime - relevant
+    if (score >= 40) return '#eab308'; // Yellow - moderate
+    if (score >= 20) return '#f97316'; // Orange - low
+    return '#ef4444'; // Red - not relevant
+  };
+  
+  const getLabel = () => {
+    if (score >= 80) return 'High';
+    if (score >= 60) return 'Good';
+    if (score >= 40) return 'Mod';
+    if (score >= 20) return 'Low';
+    return 'Min';
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 group/meter relative" title={reason || `Relevancy: ${score}/100`}>
+      {/* Mini bar */}
+      <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+        <div 
+          className="h-full rounded-full transition-all"
+          style={{ 
+            width: `${score}%`,
+            backgroundColor: getColor()
+          }}
+        />
+      </div>
+      <span className="text-[10px] font-medium" style={{ color: getColor() }}>
+        {score}
+      </span>
+      
+      {/* Tooltip */}
+      {reason && (
+        <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-zinc-900 border border-white/10 rounded text-[10px] text-zinc-400 whitespace-nowrap opacity-0 group-hover/meter:opacity-100 transition-opacity pointer-events-none z-10">
+          {reason}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StoryCard({ 
   item, 
   onClick 
@@ -677,9 +738,12 @@ function StoryCard({
       
       {/* Content */}
       <div>
-        <span className="text-xs font-medium text-[#50e2c3]">
-          {getCategoryLabel(item.category)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-[#50e2c3]">
+            {getCategoryLabel(item.category)}
+          </span>
+          <RelevancyMeter score={item.relevancyScore} reason={item.relevancyReason} />
+        </div>
         <h3 className="text-lg font-semibold text-white leading-snug mt-1 group-hover:text-[#50e2c3] transition-colors line-clamp-2">
           {item.calmHeadline}
         </h3>
