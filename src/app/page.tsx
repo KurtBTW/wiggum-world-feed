@@ -313,8 +313,20 @@ export default function Home() {
               <p className="text-zinc-500 text-xs">Crypto & AI News That Matters</p>
             </div>
             
-            {/* Right - Launch App */}
+            {/* Right - Refresh + Launch App */}
             <div className="flex items-center gap-4">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {lastUpdated && (
+                  <span className="hidden sm:inline">
+                    {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </span>
+                )}
+              </button>
               <a
                 href="https://hypurr.fi"
                 target="_blank"
@@ -364,18 +376,6 @@ export default function Home() {
                   {cat.label}
                 </button>
               ))}
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="flex items-center gap-2 px-3 py-1.5 ml-6 text-xs text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {lastUpdated && (
-                  <span>
-                    {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
         </div>
@@ -385,18 +385,21 @@ export default function Home() {
       <div className="bg-[#0a0a0a] border-b border-white/[0.06] overflow-hidden">
         <div className="ticker-wrapper">
           <div className="ticker-content">
-            {[...tickerPrices, ...tickerPrices].map((asset, index) => (
-              <div key={`${asset.symbol}-${index}`} className="ticker-item">
-                <span className="text-zinc-400 font-medium">{asset.symbol}</span>
-                <span className="text-white font-mono ml-2">
-                  ${asset.price > 1000 ? asset.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className={`ml-2 text-xs font-medium flex items-center gap-0.5 ${asset.change24h >= 0 ? 'text-[#50e2c3]' : 'text-red-500'}`}>
-                  {asset.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {asset.change24h >= 0 ? '+' : ''}{asset.change24h.toFixed(2)}%
-                </span>
-              </div>
-            ))}
+            {[...tickerPrices, ...tickerPrices].map((asset, index) => {
+              const symbolColor = getTickerSymbolColor(asset.symbol);
+              return (
+                <div key={`${asset.symbol}-${index}`} className="ticker-item">
+                  <span className="font-medium" style={{ color: symbolColor }}>{asset.symbol}</span>
+                  <span className="text-white font-mono ml-2">
+                    ${asset.price > 1000 ? asset.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`ml-2 text-xs font-medium flex items-center gap-0.5 ${asset.change24h >= 0 ? 'text-[#50e2c3]' : 'text-red-500'}`}>
+                    {asset.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {asset.change24h >= 0 ? '+' : ''}{asset.change24h.toFixed(2)}%
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -541,9 +544,12 @@ export default function Home() {
                         <p className="text-sm text-zinc-300 leading-snug group-hover:text-[#50e2c3] transition-colors line-clamp-2">
                           {item.calmHeadline}
                         </p>
-                        <span className="text-xs text-zinc-500 mt-1 block">
-                          {getCategoryLabel(item.category)}
-                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-zinc-500">
+                            {getCategoryLabel(item.category)}
+                          </span>
+                          <RelevancyMeter score={item.relevancyScore} reason={item.relevancyReason} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -766,6 +772,20 @@ function getCategoryLabel(category: Category): string {
     case 'security_alerts': return 'Security';
     case 'ai_frontier': return 'AI Frontier';
     default: return 'News';
+  }
+}
+
+function getTickerSymbolColor(symbol: string): string {
+  switch (symbol) {
+    case 'HYPE': return '#50e2c3'; // HypurrFi teal
+    case 'BTC': return '#f7931a'; // Bitcoin orange
+    case 'ETH': return '#627eea'; // Ethereum purple
+    case 'XMR': return '#ff6600'; // Monero orange
+    case 'GOLD': return '#ffd700'; // Gold
+    case 'SILVER': return '#c0c0c0'; // Silver
+    case 'URANIUM': return '#7fff00'; // Chartreuse/green
+    case 'COPPER': return '#b87333'; // Copper brown
+    default: return '#a1a1aa'; // zinc-400
   }
 }
 
