@@ -252,15 +252,19 @@ Respond in this exact JSON format (no markdown, just raw JSON):
         outlook: ''
       };
     }
-  } catch (error) {
-    console.error('[Chat] Summarize error:', error);
+  } catch (error: any) {
+    console.error('[Chat] Summarize error:', error?.message || error);
+    console.error('[Chat] Full error:', JSON.stringify(error, null, 2));
+    console.error('[Chat] Model used:', MODEL);
+    console.error('[Chat] API Key present:', !!process.env.OPENAI_API_KEY);
+    console.error('[Chat] API Key length:', process.env.OPENAI_API_KEY?.length);
     return {
       headline: itemData.item.calmHeadline,
       byline: `From ${itemData.item.sourceName}`,
       leadParagraph: itemData.item.calmSummary,
       body: itemData.item.excerpt || '',
       keyPoints: [],
-      outlook: 'Unable to generate AI summary at this time.'
+      outlook: `Error: ${error?.message || 'Unable to generate AI summary at this time.'}`
     };
   }
 }
