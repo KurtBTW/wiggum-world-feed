@@ -289,12 +289,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Header */}
-      <header className="border-b border-white/[0.08]">
-        <div className="max-w-[1600px] mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+      {/* Header + Navigation Combined */}
+      <header className="border-b border-white/[0.08] bg-[#0a0a0a]">
+        <div className="max-w-[1600px] mx-auto px-4">
+          {/* Top Row - Logo and Actions */}
+          <div className="flex items-center justify-between py-3">
             {/* Left - HypurrFi Logo */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-48">
               <Image
                 src="/hypurrfi-logo.png"
                 alt="HypurrFi"
@@ -305,16 +306,43 @@ export default function Home() {
               />
             </div>
             
-            {/* Center - HypurrRelevant */}
-            <div className="text-center">
+            {/* Center - Title + Nav aligned */}
+            <div className="flex-1 flex flex-col items-center">
               <h1 className="text-2xl font-bold text-white">
                 HypurrRelevant
               </h1>
-              <p className="text-zinc-500 text-xs">Crypto & AI News That Matters</p>
+              <p className="text-zinc-500 text-xs mb-2">Crypto & AI News That Matters</p>
+              
+              {/* Navigation Tabs - directly under title */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    selectedCategory === 'all'
+                      ? 'text-[#50e2c3] border-[#50e2c3]'
+                      : 'text-zinc-400 border-transparent hover:text-white'
+                  }`}
+                >
+                  Top Stories
+                </button>
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      selectedCategory === cat.id
+                        ? 'text-[#50e2c3] border-[#50e2c3]'
+                        : 'text-zinc-400 border-transparent hover:text-white'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
             </div>
             
             {/* Right - Refresh + Launch App */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 w-48 justify-end">
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
@@ -328,14 +356,6 @@ export default function Home() {
                 )}
               </button>
               <a
-                href="https://hypurr.fi"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-zinc-400 hover:text-[#50e2c3] transition-colors hidden sm:block"
-              >
-                HypurrFi
-              </a>
-              <a
                 href="https://app.hypurr.fi"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -347,39 +367,6 @@ export default function Home() {
           </div>
         </div>
       </header>
-
-      {/* Navigation Tabs */}
-      <nav className="border-b border-white/[0.08] bg-[#0f0f0f]">
-        <div className="max-w-[1600px] mx-auto px-4">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center">
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  selectedCategory === 'all'
-                    ? 'text-[#50e2c3] border-[#50e2c3]'
-                    : 'text-zinc-400 border-transparent hover:text-white'
-                }`}
-              >
-                Top Stories
-              </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    selectedCategory === cat.id
-                      ? 'text-[#50e2c3] border-[#50e2c3]'
-                      : 'text-zinc-400 border-transparent hover:text-white'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </nav>
 
       {/* Price Ticker */}
       <div className="bg-[#0a0a0a] border-b border-white/[0.06] overflow-hidden">
@@ -439,54 +426,10 @@ export default function Home() {
           <div className="flex-1 min-w-0">
             {/* Hero Story */}
             {heroStory && selectedCategory === 'all' && (
-              <div
-                onClick={() => setSelectedItem(heroStory)}
-                className="group cursor-pointer mb-8"
-              >
-                <div className="relative rounded-lg overflow-hidden bg-zinc-900 aspect-[2/1]">
-                  {heroStory.imageUrl ? (
-                    <img
-                      src={heroStory.imageUrl}
-                      alt=""
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#50e2c3]/20 to-[#50e2c3]/5" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#50e2c3] text-black">
-                        {getCategoryLabel(heroStory.category)}
-                      </span>
-                      {heroStory.relevancyScore !== undefined && (
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-black/50">
-                          <div className="w-16 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full rounded-full"
-                              style={{ 
-                                width: `${heroStory.relevancyScore}%`,
-                                backgroundColor: heroStory.relevancyScore >= 80 ? '#50e2c3' : heroStory.relevancyScore >= 60 ? '#84cc16' : heroStory.relevancyScore >= 40 ? '#eab308' : '#f97316'
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-white/80">{heroStory.relevancyScore}</span>
-                        </div>
-                      )}
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#50e2c3] transition-colors">
-                      {heroStory.calmHeadline}
-                    </h2>
-                    <p className="text-zinc-300 mt-2 line-clamp-2 max-w-2xl">
-                      {heroStory.calmSummary}
-                    </p>
-                    <div className="flex items-center gap-3 mt-3 text-sm text-zinc-400">
-                      <span>{heroStory.sourceName}</span>
-                      <span>{getTimeAgo(heroStory.publishedAt)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <HeroStoryCard 
+                item={heroStory} 
+                onClick={() => setSelectedItem(heroStory)} 
+              />
             )}
 
             {/* Category Header for non-all views */}
@@ -531,28 +474,11 @@ export default function Home() {
               </div>
               <div className="space-y-0">
                 {latestItems.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedItem(item)}
-                    className="group cursor-pointer py-3 border-b border-white/[0.06] last:border-0"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-xs text-zinc-500 pt-0.5 w-8 flex-shrink-0">
-                        {getTimeAgo(item.publishedAt)}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-zinc-300 leading-snug group-hover:text-[#50e2c3] transition-colors line-clamp-2">
-                          {item.calmHeadline}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-zinc-500">
-                            {getCategoryLabel(item.category)}
-                          </span>
-                          <RelevancyMeter score={item.relevancyScore} reason={item.relevancyReason} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <LatestItem 
+                    key={item.id} 
+                    item={item} 
+                    onClick={() => setSelectedItem(item)} 
+                  />
                 ))}
               </div>
               
@@ -662,45 +588,56 @@ export default function Home() {
   );
 }
 
-function RelevancyMeter({ score, reason }: { score?: number; reason?: string }) {
-  if (score === undefined || score === null) return null;
+function RelevancyMeter({ score, reason, item }: { score?: number; reason?: string; item?: TileItem }) {
+  // Calculate a fallback score if none provided
+  let displayScore = score;
+  let displayReason = reason;
   
-  const getColor = () => {
-    if (score >= 80) return '#50e2c3'; // Teal - highly relevant
-    if (score >= 60) return '#84cc16'; // Lime - relevant
-    if (score >= 40) return '#eab308'; // Yellow - moderate
-    if (score >= 20) return '#f97316'; // Orange - low
+  if (displayScore === undefined || displayScore === null) {
+    // Fallback: calculate based on keywords
+    if (item) {
+      const text = `${item.calmHeadline} ${item.calmSummary || ''} ${item.originalTitle || ''}`.toLowerCase();
+      const keywords = ['hyperliquid', 'hype', 'bitcoin', 'btc', 'ethereum', 'eth', 'defi', 'ai', 'hack', 'exploit'];
+      let fallbackScore = 30; // Base score
+      for (const kw of keywords) {
+        if (text.includes(kw)) fallbackScore += 10;
+      }
+      displayScore = Math.min(fallbackScore, 100);
+      displayReason = 'Estimated relevancy';
+    } else {
+      displayScore = 50; // Default middle score
+      displayReason = 'Pending analysis';
+    }
+  }
+  
+  const getColor = (s: number) => {
+    if (s >= 80) return '#50e2c3'; // Teal - highly relevant
+    if (s >= 60) return '#84cc16'; // Lime - relevant
+    if (s >= 40) return '#eab308'; // Yellow - moderate
+    if (s >= 20) return '#f97316'; // Orange - low
     return '#ef4444'; // Red - not relevant
-  };
-  
-  const getLabel = () => {
-    if (score >= 80) return 'High';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Mod';
-    if (score >= 20) return 'Low';
-    return 'Min';
   };
 
   return (
-    <div className="flex items-center gap-1.5 group/meter relative" title={reason || `Relevancy: ${score}/100`}>
+    <div className="flex items-center gap-1.5 group/meter relative" title={displayReason || `Relevancy: ${displayScore}/100`}>
       {/* Mini bar */}
       <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
         <div 
           className="h-full rounded-full transition-all"
           style={{ 
-            width: `${score}%`,
-            backgroundColor: getColor()
+            width: `${displayScore}%`,
+            backgroundColor: getColor(displayScore)
           }}
         />
       </div>
-      <span className="text-[10px] font-medium" style={{ color: getColor() }}>
-        {score}
+      <span className="text-[10px] font-medium" style={{ color: getColor(displayScore) }}>
+        {displayScore}
       </span>
       
       {/* Tooltip */}
-      {reason && (
+      {displayReason && (
         <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-zinc-900 border border-white/10 rounded text-[10px] text-zinc-400 whitespace-nowrap opacity-0 group-hover/meter:opacity-100 transition-opacity pointer-events-none z-10">
-          {reason}
+          {displayReason}
         </div>
       )}
     </div>
@@ -714,6 +651,28 @@ function StoryCard({
   item: TileItem & { category: Category };
   onClick: () => void;
 }) {
+  const [imgError, setImgError] = useState(false);
+  
+  const getCategoryGradient = (cat: Category) => {
+    switch (cat) {
+      case 'defi_alpha': return 'from-emerald-900/80 via-teal-900/60 to-zinc-900';
+      case 'token_launches': return 'from-amber-900/80 via-orange-900/60 to-zinc-900';
+      case 'security_alerts': return 'from-red-900/80 via-rose-900/60 to-zinc-900';
+      case 'ai_frontier': return 'from-violet-900/80 via-purple-900/60 to-zinc-900';
+      default: return 'from-zinc-800 to-zinc-900';
+    }
+  };
+
+  const getCategoryIcon = (cat: Category) => {
+    switch (cat) {
+      case 'defi_alpha': return 'DeFi';
+      case 'token_launches': return 'NEW';
+      case 'security_alerts': return 'ALERT';
+      case 'ai_frontier': return 'AI';
+      default: return 'NEWS';
+    }
+  };
+
   return (
     <div
       onClick={onClick}
@@ -721,23 +680,25 @@ function StoryCard({
     >
       {/* Image */}
       <div className="relative rounded-lg overflow-hidden bg-zinc-900 aspect-[16/9] mb-3">
-        {item.imageUrl ? (
+        {item.imageUrl && !imgError ? (
           <img
             src={item.imageUrl}
             alt=""
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center">
-            <span className="text-4xl opacity-20">
-              {item.category === 'defi_alpha' && '📈'}
-              {item.category === 'token_launches' && '🪙'}
-              {item.category === 'security_alerts' && '🔒'}
-              {item.category === 'ai_frontier' && '🤖'}
-            </span>
+          <div className={`w-full h-full bg-gradient-to-br ${getCategoryGradient(item.category)} flex items-center justify-center relative`}>
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-4 left-4 w-32 h-32 rounded-full bg-white/20 blur-3xl" />
+              <div className="absolute bottom-4 right-4 w-24 h-24 rounded-full bg-[#50e2c3]/30 blur-2xl" />
+            </div>
+            <div className="text-center z-10">
+              <span className="text-3xl font-black text-white/20 tracking-wider">
+                {getCategoryIcon(item.category)}
+              </span>
+              <p className="text-xs text-white/30 mt-1">{item.sourceName}</p>
+            </div>
           </div>
         )}
       </div>
@@ -748,7 +709,7 @@ function StoryCard({
           <span className="text-xs font-medium text-[#50e2c3]">
             {getCategoryLabel(item.category)}
           </span>
-          <RelevancyMeter score={item.relevancyScore} reason={item.relevancyReason} />
+          <RelevancyMeter score={item.relevancyScore} reason={item.relevancyReason} item={item} />
         </div>
         <h3 className="text-lg font-semibold text-white leading-snug mt-1 group-hover:text-[#50e2c3] transition-colors line-clamp-2">
           {item.calmHeadline}
@@ -759,6 +720,170 @@ function StoryCard({
         <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500">
           <span>{item.sourceName}</span>
           <span>{getTimeAgo(item.publishedAt)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroStoryCard({ 
+  item, 
+  onClick 
+}: { 
+  item: TileItem & { category: Category };
+  onClick: () => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+  
+  const getCategoryGradient = (cat: Category) => {
+    switch (cat) {
+      case 'defi_alpha': return 'from-emerald-900/80 via-teal-900/60 to-zinc-900';
+      case 'token_launches': return 'from-amber-900/80 via-orange-900/60 to-zinc-900';
+      case 'security_alerts': return 'from-red-900/80 via-rose-900/60 to-zinc-900';
+      case 'ai_frontier': return 'from-violet-900/80 via-purple-900/60 to-zinc-900';
+      default: return 'from-zinc-800 to-zinc-900';
+    }
+  };
+
+  const getColor = (s: number) => {
+    if (s >= 80) return '#50e2c3';
+    if (s >= 60) return '#84cc16';
+    if (s >= 40) return '#eab308';
+    if (s >= 20) return '#f97316';
+    return '#ef4444';
+  };
+
+  // Calculate fallback score
+  let displayScore = item.relevancyScore;
+  if (displayScore === undefined || displayScore === null) {
+    const text = `${item.calmHeadline} ${item.calmSummary || ''}`.toLowerCase();
+    const keywords = ['hyperliquid', 'hype', 'bitcoin', 'btc', 'ethereum', 'eth', 'defi', 'ai'];
+    let fallbackScore = 30;
+    for (const kw of keywords) {
+      if (text.includes(kw)) fallbackScore += 10;
+    }
+    displayScore = Math.min(fallbackScore, 100);
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      className="group cursor-pointer mb-8"
+    >
+      <div className="relative rounded-lg overflow-hidden bg-zinc-900 aspect-[2/1]">
+        {item.imageUrl && !imgError ? (
+          <img
+            src={item.imageUrl}
+            alt=""
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${getCategoryGradient(item.category)} relative`}>
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-white/20 blur-3xl" />
+              <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-[#50e2c3]/30 blur-3xl" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-6xl font-black text-white/10 tracking-wider">
+                {item.category === 'defi_alpha' && 'DeFi ALPHA'}
+                {item.category === 'token_launches' && 'NEW TOKEN'}
+                {item.category === 'security_alerts' && 'SECURITY'}
+                {item.category === 'ai_frontier' && 'AI FRONTIER'}
+              </span>
+            </div>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-[#50e2c3] text-black">
+              {getCategoryLabel(item.category)}
+            </span>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-black/50">
+              <div className="w-16 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full"
+                  style={{ 
+                    width: `${displayScore}%`,
+                    backgroundColor: getColor(displayScore)
+                  }}
+                />
+              </div>
+              <span className="text-xs text-white/80">{displayScore}</span>
+            </div>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#50e2c3] transition-colors">
+            {item.calmHeadline}
+          </h2>
+          <p className="text-zinc-300 mt-2 line-clamp-2 max-w-2xl">
+            {item.calmSummary}
+          </p>
+          <div className="flex items-center gap-3 mt-3 text-sm text-zinc-400">
+            <span>{item.sourceName}</span>
+            <span>{getTimeAgo(item.publishedAt)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LatestItem({ 
+  item, 
+  onClick 
+}: { 
+  item: TileItem & { category: Category };
+  onClick: () => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+  
+  const getCategoryColor = (cat: Category) => {
+    switch (cat) {
+      case 'defi_alpha': return 'bg-emerald-900/50';
+      case 'token_launches': return 'bg-amber-900/50';
+      case 'security_alerts': return 'bg-red-900/50';
+      case 'ai_frontier': return 'bg-violet-900/50';
+      default: return 'bg-zinc-800';
+    }
+  };
+
+  return (
+    <div
+      onClick={onClick}
+      className="group cursor-pointer py-3 border-b border-white/[0.06] last:border-0"
+    >
+      <div className="flex items-start gap-3">
+        {/* Thumbnail */}
+        <div className={`w-16 h-12 rounded overflow-hidden flex-shrink-0 ${!item.imageUrl || imgError ? getCategoryColor(item.category) : ''}`}>
+          {item.imageUrl && !imgError ? (
+            <img
+              src={item.imageUrl}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-[10px] font-bold text-white/40">
+                {item.category === 'defi_alpha' && 'DeFi'}
+                {item.category === 'token_launches' && 'NEW'}
+                {item.category === 'security_alerts' && 'SEC'}
+                {item.category === 'ai_frontier' && 'AI'}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-zinc-300 leading-snug group-hover:text-[#50e2c3] transition-colors line-clamp-2">
+            {item.calmHeadline}
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs text-zinc-500">
+              {getTimeAgo(item.publishedAt)}
+            </span>
+            <RelevancyMeter score={item.relevancyScore} reason={item.relevancyReason} item={item} />
+          </div>
         </div>
       </div>
     </div>
