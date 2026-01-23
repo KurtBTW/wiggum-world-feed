@@ -93,7 +93,7 @@ export function ItemDrawer({ item, onClose, onExplain }: ItemDrawerProps) {
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all gradient-border bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 text-white"
           >
             <Sparkles className="w-4 h-4 text-[#fbbf24]" />
-            <span>Summarize with GPT-5.2</span>
+            <span>Summarize with AI</span>
           </button>
         </div>
       </div>

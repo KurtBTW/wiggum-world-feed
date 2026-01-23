@@ -113,7 +113,7 @@ export function ChatWidget() {
             </div>
             <div>
               <h3 className="font-semibold text-white">HypurrAI Assistant</h3>
-              <p className="text-xs text-zinc-400">Powered by GPT-5.2</p>
+              <p className="text-xs text-zinc-400">Powered by GPT-4o</p>
             </div>
           </div>
 

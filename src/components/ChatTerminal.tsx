@@ -133,7 +133,7 @@ export const ChatTerminal = forwardRef<ChatTerminalHandle, ChatTerminalProps>(
             <Sparkles className="w-4 h-4 text-black" />
           </div>
           <div className="text-left">
-            <span className="text-sm font-medium text-white block">GPT-5.2</span>
+            <span className="text-sm font-medium text-white block">HypurrAI</span>
             <span className="text-[10px] text-zinc-500">Ask anything</span>
           </div>
           {messages.length > 0 && (
@@ -159,7 +159,7 @@ export const ChatTerminal = forwardRef<ChatTerminalHandle, ChatTerminalProps>(
               <Sparkles className="w-4 h-4 text-black" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-white">GPT-5.2</span>
+              <span className="text-sm font-semibold text-white">HypurrAI</span>
               <span className="text-[10px] text-zinc-500 block">Powered by OpenAI</span>
             </div>
           </div>
