@@ -359,10 +359,9 @@ export default function Home() {
                 href="https://app.hypurr.fi"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex flex-col items-center justify-center text-center px-5 py-2 rounded-full border-2 border-[#50e2c3] text-[#50e2c3] font-medium hover:bg-[#50e2c3] hover:text-black transition-all leading-tight"
+                className="inline-flex items-center justify-center text-sm px-4 py-2 rounded-full border-2 border-[#50e2c3] text-[#50e2c3] font-medium hover:bg-[#50e2c3] hover:text-black transition-all whitespace-nowrap"
               >
-                <span className="text-[10px] uppercase tracking-wider">Launch</span>
-                <span className="text-sm font-bold -mt-0.5">App</span>
+                Launch App
               </a>
             </div>
           </div>
