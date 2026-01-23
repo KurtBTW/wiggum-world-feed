@@ -64,6 +64,8 @@ export default function Home() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [tickerPrices, setTickerPrices] = useState<TickerPrice[]>([]);
+  const [categoryItems, setCategoryItems] = useState<Record<Category, TileItem[]>>({} as Record<Category, TileItem[]>);
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
 
   useEffect(() => {
     fetchTiles();
@@ -75,6 +77,13 @@ export default function Home() {
       clearInterval(tickerInterval);
     };
   }, []);
+
+  // Fetch more items when category changes
+  useEffect(() => {
+    if (selectedCategory !== 'all') {
+      fetchCategoryItems(selectedCategory);
+    }
+  }, [selectedCategory]);
 
   const fetchTiles = useCallback(async () => {
     try {
@@ -147,10 +156,35 @@ export default function Home() {
         setTiles(data.tiles);
         setLastUpdated(new Date(data.lastUpdated));
       }
+      // Also refresh current category if not on 'all'
+      if (selectedCategory !== 'all') {
+        await fetchCategoryItems(selectedCategory);
+      }
     } catch (error) {
       console.error('Failed to refresh tiles:', error);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const fetchCategoryItems = async (category: Category) => {
+    // Don't refetch if we already have items for this category
+    if (categoryItems[category]?.length > 0) return;
+    
+    setIsCategoryLoading(true);
+    try {
+      const res = await fetch(`/api/tiles/${category}?limit=30`);
+      const data = await res.json();
+      if (data.items) {
+        setCategoryItems(prev => ({
+          ...prev,
+          [category]: data.items
+        }));
+      }
+    } catch (error) {
+      console.error(`Failed to fetch ${category} items:`, error);
+    } finally {
+      setIsCategoryLoading(false);
     }
   };
 
@@ -218,6 +252,13 @@ export default function Home() {
         .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
         .slice(0, 12);
     }
+    
+    // Use expanded category items if available, otherwise fall back to tile items
+    const expandedItems = categoryItems[selectedCategory];
+    if (expandedItems && expandedItems.length > 0) {
+      return expandedItems.map(item => ({ ...item, category: selectedCategory }));
+    }
+    
     const tile = tiles[selectedCategory];
     return tile?.items?.map(item => ({ ...item, category: selectedCategory })) || [];
   };
@@ -429,8 +470,24 @@ export default function Home() {
               </div>
             )}
 
+            {/* Category Header for non-all views */}
+            {selectedCategory !== 'all' && (
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-white">
+                  {CATEGORIES.find(c => c.id === selectedCategory)?.label}
+                </h2>
+                <p className="text-sm text-zinc-500 mt-1">
+                  All stories from this category
+                </p>
+              </div>
+            )}
+
             {/* Story Grid */}
-            {currentItems.length === 0 ? (
+            {isCategoryLoading && selectedCategory !== 'all' ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-[#50e2c3]" />
+              </div>
+            ) : currentItems.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-zinc-500">No stories yet. Click refresh to fetch latest news.</p>
               </div>
