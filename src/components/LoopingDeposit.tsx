@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, formatEther, encodeAbiParameters, parseAbiParameters } from 'viem';
+import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi';
+import { parseEther, formatEther } from 'viem';
 import { Loader2, ArrowDown, ExternalLink, TrendingUp, Wallet, CheckCircle, AlertCircle } from 'lucide-react';
 import { LOOPING_CONTRACTS, fetchLHYPEData, type LHYPEData } from '@/services/looping';
 import { LHYPE_DEPOSITOR_ABI } from '@/lib/abis';
@@ -36,26 +36,30 @@ export function LoopingDeposit({ onSuccess }: LoopingDepositProps) {
   }, [isSuccess, onSuccess]);
 
   const parsedAmount = amount ? parseFloat(amount) : 0;
+  const depositAmount = parsedAmount > 0 ? parseEther(amount) : BigInt(0);
   const estimatedLHYPE = lhypeData && parsedAmount > 0
     ? parsedAmount / lhypeData.exchangeRate
     : 0;
 
-  const handleDeposit = async () => {
-    if (!address || !amount || parsedAmount <= 0 || !lhypeData) return;
+  const { data: simulateData, error: simulateError } = useSimulateContract({
+    address: LOOPING_CONTRACTS.DEPOSITOR,
+    abi: LHYPE_DEPOSITOR_ABI,
+    functionName: 'depositNative',
+    args: [depositAmount, BigInt(0), address!, '0x'],
+    value: depositAmount,
+    query: {
+      enabled: !!address && depositAmount > BigInt(0),
+    },
+  });
 
-    const depositAmount = parseEther(amount);
-    const slippage = 0.005;
-    const minShares = parseEther((estimatedLHYPE * (1 - slippage)).toFixed(18));
-    const communityCode = encodeAbiParameters(
-      parseAbiParameters('bytes32'),
-      ['0x0000000000000000000000000000000000000000000000000000000000000000']
-    ).slice(0, 66) as `0x${string}`;
+  const handleDeposit = async () => {
+    if (!address || !amount || parsedAmount <= 0) return;
 
     writeContract({
       address: LOOPING_CONTRACTS.DEPOSITOR,
       abi: LHYPE_DEPOSITOR_ABI,
       functionName: 'depositNative',
-      args: [depositAmount, minShares, address, communityCode as `0x${string}`],
+      args: [depositAmount, BigInt(0), address, '0x'],
       value: depositAmount,
     });
   };
@@ -161,6 +165,13 @@ export function LoopingDeposit({ onSuccess }: LoopingDepositProps) {
             >
               <ExternalLink className="w-4 h-4" />
             </a>
+          </div>
+        ) : simulateError ? (
+          <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+            <AlertCircle className="w-5 h-5 text-yellow-400" />
+            <span className="text-yellow-400 text-sm">
+              Simulation: {(simulateError as Error).message?.slice(0, 60) || 'Error'}
+            </span>
           </div>
         ) : writeError ? (
           <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">

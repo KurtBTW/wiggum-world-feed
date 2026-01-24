@@ -10,20 +10,21 @@ export interface LHYPEData {
 }
 
 export async function fetchLHYPEData(): Promise<LHYPEData> {
-  const res = await fetch(LHYPE_API, { next: { revalidate: 60 } });
+  const res = await fetch(LHYPE_API, { cache: 'no-store' });
   
   if (!res.ok) {
     throw new Error('Failed to fetch LHYPE data');
   }
   
-  const data = await res.json();
+  const json = await res.json();
+  const data = json.result || json;
   
   return {
     rewardRate: data.reward_rate || 0,
     apy: (data.reward_rate || 0) * 100,
     tvl: data.assets_under_management || 0,
-    tvlUsd: data.assets_under_management_usd || 0,
-    exchangeRate: data.exchange_rate || 1,
+    tvlUsd: data.assets_under_management || 0,
+    exchangeRate: data.exchange_ratio || 1,
     price: data.price || 0,
   };
 }
