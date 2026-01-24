@@ -8,6 +8,8 @@ import {
   ChevronRight, Shield, Loader2, Wallet 
 } from 'lucide-react';
 
+const APP_VERSION = 'v1.0.2-lhype-fix';
+
 interface NavItem {
   href: string;
   label: string;
@@ -116,6 +118,10 @@ export default function NetworkLayout({
             <LogOut className="w-4 h-4" />
             <span className="text-sm">Sign Out</span>
           </button>
+          
+          <div className="mt-3 px-4 py-2 text-center">
+            <span className="text-[10px] text-zinc-600 font-mono">{APP_VERSION}</span>
+          </div>
         </div>
       </aside>
 
