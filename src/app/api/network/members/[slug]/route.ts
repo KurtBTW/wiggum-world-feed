@@ -29,6 +29,17 @@ export async function GET(
             email: true,
           },
         },
+        twitterAccounts: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            profileImageUrl: true,
+            personName: true,
+            personRole: true,
+            accountType: true,
+          },
+        },
       },
     });
 
@@ -39,7 +50,28 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ member });
+    const tweets = await prisma.tweet.findMany({
+      where: {
+        account: {
+          memberId: member.id,
+        },
+        isHidden: false,
+        category: { not: 'NOISE' },
+      },
+      include: {
+        account: {
+          select: {
+            username: true,
+            displayName: true,
+            profileImageUrl: true,
+          },
+        },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 10,
+    });
+
+    return NextResponse.json({ member, tweets });
   } catch (error) {
     console.error('Fetch member error:', error);
     return NextResponse.json(

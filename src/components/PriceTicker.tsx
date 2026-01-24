@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { PriceChartModal } from './PriceChartModal';
 
 interface PriceData {
   symbol: string;
@@ -21,12 +22,15 @@ function formatPrice(price: number): string {
   }
 }
 
-function PriceItem({ item }: { item: PriceData }) {
+function PriceItem({ item, onClick }: { item: PriceData; onClick: () => void }) {
   const isPositive = item.change24h > 0;
   const isNegative = item.change24h < 0;
   
   return (
-    <div className="flex items-center gap-2 px-3 py-1 whitespace-nowrap">
+    <button 
+      onClick={onClick}
+      className="flex items-center gap-2 px-3 py-1 whitespace-nowrap hover:bg-white/[0.05] rounded transition-colors cursor-pointer"
+    >
       <span className="text-zinc-500 text-xs font-medium">{item.symbol}</span>
       <span className="text-white text-xs font-semibold">${formatPrice(item.price)}</span>
       <span className={`flex items-center gap-0.5 text-[10px] font-medium ${
@@ -41,13 +45,14 @@ function PriceItem({ item }: { item: PriceData }) {
         )}
         {Math.abs(item.change24h).toFixed(2)}%
       </span>
-    </div>
+    </button>
   );
 }
 
 export function PriceTicker() {
   const [prices, setPrices] = useState<PriceData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAsset, setSelectedAsset] = useState<PriceData | null>(null);
 
   useEffect(() => {
     async function fetchPrices() {
@@ -79,32 +84,60 @@ export function PriceTicker() {
   const commodityPrices = prices.filter(p => p.type === 'commodity');
 
   return (
-    <div className="h-8 bg-black/50 border-b border-white/[0.06] overflow-hidden">
-      <div className="h-full flex items-center animate-ticker">
-        <div className="flex items-center">
-          {cryptoPrices.map((item) => (
-            <PriceItem key={item.symbol} item={item} />
-          ))}
+    <>
+      <div className="h-8 bg-black/50 border-b border-white/[0.06] overflow-hidden">
+        <div className="h-full flex items-center animate-ticker">
+          <div className="flex items-center">
+            {cryptoPrices.map((item) => (
+              <PriceItem 
+                key={item.symbol} 
+                item={item} 
+                onClick={() => setSelectedAsset(item)}
+              />
+            ))}
+            
+            <div className="w-px h-4 bg-white/[0.1] mx-2" />
+            
+            {commodityPrices.map((item) => (
+              <PriceItem 
+                key={item.symbol} 
+                item={item} 
+                onClick={() => setSelectedAsset(item)}
+              />
+            ))}
+          </div>
           
-          <div className="w-px h-4 bg-white/[0.1] mx-2" />
-          
-          {commodityPrices.map((item) => (
-            <PriceItem key={item.symbol} item={item} />
-          ))}
-        </div>
-        
-        <div className="flex items-center ml-8">
-          {cryptoPrices.map((item) => (
-            <PriceItem key={`${item.symbol}-2`} item={item} />
-          ))}
-          
-          <div className="w-px h-4 bg-white/[0.1] mx-2" />
-          
-          {commodityPrices.map((item) => (
-            <PriceItem key={`${item.symbol}-2`} item={item} />
-          ))}
+          <div className="flex items-center ml-8">
+            {cryptoPrices.map((item) => (
+              <PriceItem 
+                key={`${item.symbol}-2`} 
+                item={item} 
+                onClick={() => setSelectedAsset(item)}
+              />
+            ))}
+            
+            <div className="w-px h-4 bg-white/[0.1] mx-2" />
+            
+            {commodityPrices.map((item) => (
+              <PriceItem 
+                key={`${item.symbol}-2`} 
+                item={item} 
+                onClick={() => setSelectedAsset(item)}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      {selectedAsset && (
+        <PriceChartModal
+          symbol={selectedAsset.symbol}
+          name={selectedAsset.name}
+          currentPrice={selectedAsset.price}
+          change24h={selectedAsset.change24h}
+          onClose={() => setSelectedAsset(null)}
+        />
+      )}
+    </>
   );
 }

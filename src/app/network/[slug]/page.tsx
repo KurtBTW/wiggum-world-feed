@@ -6,8 +6,31 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Loader2, ArrowLeft, Globe, Twitter, MessageCircle, Github,
-  ExternalLink, Building2, Calendar, Tag
+  ExternalLink, Building2, Calendar, Tag, Users, Newspaper, Sparkles
 } from 'lucide-react';
+
+interface TeamMember {
+  id: string;
+  username: string;
+  displayName: string;
+  profileImageUrl: string | null;
+  personName: string | null;
+  personRole: string | null;
+}
+
+interface Tweet {
+  id: string;
+  tweetId: string;
+  text: string;
+  category: string;
+  publishedAt: string;
+  likeCount: number;
+  account: {
+    username: string;
+    displayName: string;
+    profileImageUrl: string | null;
+  };
+}
 
 interface Member {
   id: string;
@@ -24,6 +47,7 @@ interface Member {
   seeking: string[];
   offering: string[];
   joinedAt: string;
+  twitterAccounts?: TeamMember[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -48,6 +72,7 @@ export default function MemberProfilePage() {
   const slug = params.slug as string;
 
   const [member, setMember] = useState<Member | null>(null);
+  const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,6 +93,7 @@ export default function MemberProfilePage() {
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setMember(data.member);
+      setTweets(data.tweets || []);
     } catch (err) {
       console.error('Failed to fetch member:', err);
     } finally {
@@ -237,6 +263,107 @@ export default function MemberProfilePage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {member.twitterAccounts && member.twitterAccounts.length > 0 && (
+            <div className="p-8 border-t border-white/[0.06]">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#50e2c3]" />
+                Team
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {member.twitterAccounts.map((account) => (
+                  <a
+                    key={account.id}
+                    href={`https://twitter.com/${account.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+                  >
+                    {account.profileImageUrl ? (
+                      <img
+                        src={account.profileImageUrl}
+                        alt={account.displayName}
+                        className="w-10 h-10 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white/[0.1] flex items-center justify-center">
+                        <Twitter className="w-5 h-5 text-zinc-500" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {account.personName || account.displayName}
+                      </p>
+                      <p className="text-xs text-zinc-500 truncate">
+                        {account.personRole || `@${account.username}`}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tweets.length > 0 && (
+            <div className="p-8 border-t border-white/[0.06]">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Newspaper className="w-5 h-5 text-[#50e2c3]" />
+                Recent Updates
+              </h2>
+              <div className="space-y-4">
+                {tweets.map((tweet) => (
+                  <a
+                    key={tweet.id}
+                    href={`https://twitter.com/${tweet.account.username}/status/${tweet.tweetId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      {tweet.account.profileImageUrl ? (
+                        <img
+                          src={tweet.account.profileImageUrl}
+                          alt={tweet.account.displayName}
+                          className="w-10 h-10 rounded-full flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-white/[0.1] flex items-center justify-center flex-shrink-0">
+                          <Twitter className="w-5 h-5 text-zinc-500" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-white text-sm">
+                            {tweet.account.displayName}
+                          </span>
+                          <span className="text-zinc-500 text-sm">
+                            @{tweet.account.username}
+                          </span>
+                          <span className="text-zinc-600 text-xs">
+                            {new Date(tweet.publishedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-zinc-300 text-sm line-clamp-3">
+                          {tweet.text}
+                        </p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            tweet.category === 'ANNOUNCEMENT' 
+                              ? 'bg-blue-500/20 text-blue-400' 
+                              : tweet.category === 'METRICS'
+                              ? 'bg-purple-500/20 text-purple-400'
+                              : 'bg-zinc-500/20 text-zinc-400'
+                          }`}>
+                            {tweet.category}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
               </div>
             </div>
           )}

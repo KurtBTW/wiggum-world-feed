@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { TweetCategory, AccountType } from '@prisma/client';
 import OpenAI from 'openai';
+import { addKnowledgeItem } from './embeddings';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -183,7 +184,7 @@ export async function ingestTweetsForAccount(accountId: string): Promise<number>
 
     const { category, reason } = await classifyTweet(tweet.text);
 
-    await prisma.tweet.create({
+    const newTweet = await prisma.tweet.create({
       data: {
         tweetId: tweet.id,
         accountId: account.id,
@@ -206,6 +207,24 @@ export async function ingestTweetsForAccount(accountId: string): Promise<number>
         isHidden: category === 'NOISE' || isReply,
       },
     });
+
+    if (category !== 'NOISE' && !isReply) {
+      try {
+        const content = `[${account.displayName}] @${account.username}: ${tweet.text}`;
+        await addKnowledgeItem({
+          content,
+          sourceType: 'tweet',
+          sourceUrl: `https://twitter.com/${account.username}/status/${tweet.id}`,
+          sourceId: tweet.id,
+          author: account.username,
+          category: category.toLowerCase(),
+          importance: category === 'ANNOUNCEMENT' ? 0.8 : category === 'METRICS' ? 0.7 : 0.5,
+          publishedAt: new Date(tweet.created_at),
+        });
+      } catch (e) {
+        console.error('Failed to add tweet to knowledge store:', e);
+      }
+    }
 
     ingestedCount++;
   }

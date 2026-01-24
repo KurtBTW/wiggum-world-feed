@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -212,13 +212,23 @@ function StatusContent() {
           )}
 
           {application.status === 'APPROVED' && (
-            <Link
-              href="/network"
-              className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#50e2c3] text-black font-semibold rounded-lg hover:bg-[#3fcbac] transition-colors"
-            >
-              <Network className="w-5 h-5" />
-              Enter the Network
-            </Link>
+            session?.user?.role === 'MEMBER' || session?.user?.role === 'ADMIN' ? (
+              <Link
+                href="/network"
+                className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#50e2c3] text-black font-semibold rounded-lg hover:bg-[#3fcbac] transition-colors"
+              >
+                <Network className="w-5 h-5" />
+                Enter the Network
+              </Link>
+            ) : (
+              <button
+                onClick={() => signIn(undefined, { callbackUrl: '/network' })}
+                className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#50e2c3] text-black font-semibold rounded-lg hover:bg-[#3fcbac] transition-colors"
+              >
+                <Network className="w-5 h-5" />
+                Enter the Network
+              </button>
+            )
           )}
 
           {application.status === 'NEEDS_INFO' && (

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
+import { Web3Provider } from "@/components/Web3Provider";
+import { LastAgent } from "@/components/LastAgent";
 
 export const metadata: Metadata = {
   title: "Last Network",
@@ -18,9 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <SessionProvider>
-          {children}
-        </SessionProvider>
+        <Web3Provider>
+          <SessionProvider>
+            {children}
+            <LastAgent />
+          </SessionProvider>
+        </Web3Provider>
       </body>
     </html>
   );

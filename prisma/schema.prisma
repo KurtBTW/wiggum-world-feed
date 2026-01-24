@@ -477,3 +477,62 @@ model WiggumLoopLog {
   @@index([category])
   @@index([createdAt])
 }
+
+// ============================================
+// LAST AGENT - AI KNOWLEDGE BASE
+// ============================================
+
+model KnowledgeItem {
+  id              String   @id @default(uuid())
+  content         String   @db.Text
+  
+  sourceType      String
+  sourceUrl       String?
+  sourceId        String?  @unique
+  
+  protocolSlug    String?
+  author          String?
+  
+  category        String?
+  importance      Float    @default(0.5)
+  
+  publishedAt     DateTime?
+  ingestedAt      DateTime @default(now())
+  
+  @@index([sourceType])
+  @@index([protocolSlug])
+  @@index([category])
+  @@index([publishedAt])
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  userId    String?
+  sessionId String   @unique
+  
+  title     String?
+  
+  messages  AgentMessage[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model AgentMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role           String
+  content        String   @db.Text
+  
+  sources        String[]
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([conversationId])
+  @@index([createdAt])
+}

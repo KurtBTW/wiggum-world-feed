@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Network, Users, Newspaper, User, LogOut, 
-  ChevronRight, Shield, Loader2 
+  ChevronRight, Shield, Loader2, Wallet 
 } from 'lucide-react';
 
 interface NavItem {
@@ -16,6 +16,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { href: '/network/dashboard', label: 'Dashboard', icon: <Wallet className="w-5 h-5" /> },
   { href: '/network', label: 'Directory', icon: <Users className="w-5 h-5" /> },
   { href: '/network/feed', label: 'News Feed', icon: <Newspaper className="w-5 h-5" /> },
   { href: '/status', label: 'My Profile', icon: <User className="w-5 h-5" /> },
@@ -30,7 +31,8 @@ export default function NetworkLayout({
   const { data: session, status } = useSession();
   const pathname = usePathname();
   
-  const isProfilePage = pathname.match(/^\/network\/[^/]+$/);
+  const isDashboardPage = pathname === '/network/dashboard';
+  const isProfilePage = pathname.match(/^\/network\/[^/]+$/) && !isDashboardPage;
   const isFeedPage = pathname === '/network/feed';
   
   if (status === 'loading') {

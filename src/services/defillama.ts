@@ -1,6 +1,8 @@
 // DefiLlama API Service - TVL, Protocol data, and Yields
 import type { DefiLlamaProtocol, DefiLlamaYield, SupportedChain } from '@/types';
 import { SUPPORTED_CHAINS } from '@/types';
+import { addKnowledgeItem } from './embeddings';
+import { prisma } from '@/lib/prisma';
 
 const BASE_URL = 'https://api.llama.fi';
 const YIELDS_URL = 'https://yields.llama.fi';
@@ -241,4 +243,99 @@ export function formatTVL(tvl: number): string {
 export function formatChange(change: number): string {
   const sign = change >= 0 ? '+' : '';
   return `${sign}${change.toFixed(2)}%`;
+}
+
+/**
+ * Ingest protocol metrics into knowledge store
+ */
+export async function ingestProtocolMetrics(): Promise<number> {
+  const movers = await getTVLMovers(5);
+  const topProtocols = await getTopProtocols(20);
+  
+  const allProtocols = [...movers.gainers, ...movers.losers, ...topProtocols];
+  const seen = new Set<string>();
+  let added = 0;
+  
+  for (const protocol of allProtocols) {
+    if (seen.has(protocol.id)) continue;
+    seen.add(protocol.id);
+    
+    const sourceId = `defillama-${protocol.id}-${new Date().toISOString().split('T')[0]}`;
+    
+    try {
+      const existing = await prisma.knowledgeItem.findUnique({
+        where: { sourceId },
+      });
+      
+      if (existing) continue;
+      
+      const content = `[DeFiLlama Metrics] ${protocol.name}: TVL ${formatTVL(protocol.tvl)} (24h change: ${formatChange(protocol.change_1d)}). Category: ${protocol.category}. Chains: ${protocol.chains.slice(0, 5).join(', ')}.`;
+      
+      await addKnowledgeItem({
+        content,
+        sourceType: 'metrics',
+        sourceUrl: `https://defillama.com/protocol/${protocol.id}`,
+        sourceId,
+        category: 'metrics',
+        importance: protocol.tvl > 100_000_000 ? 0.7 : 0.5,
+        publishedAt: new Date(),
+      });
+      added++;
+    } catch (e) {
+      console.error(`Failed to add metrics for ${protocol.name}:`, e);
+    }
+  }
+  
+  return added;
+}
+
+/**
+ * Ingest yield data into knowledge store
+ */
+export async function ingestYieldData(): Promise<number> {
+  const yields = await getTopYields(25);
+  let added = 0;
+  
+  for (const pool of yields) {
+    const sourceId = `defillama-yield-${pool.pool}-${new Date().toISOString().split('T')[0]}`;
+    
+    try {
+      const existing = await prisma.knowledgeItem.findUnique({
+        where: { sourceId },
+      });
+      
+      if (existing) continue;
+      
+      const content = `[DeFiLlama Yields] ${pool.project} on ${pool.chain}: ${pool.symbol} pool with ${pool.apy.toFixed(2)}% APY. TVL: ${formatTVL(pool.tvlUsd)}.${pool.apyBase ? ` Base APY: ${pool.apyBase.toFixed(2)}%` : ''}${pool.apyReward ? ` Reward APY: ${pool.apyReward.toFixed(2)}%` : ''}`;
+      
+      await addKnowledgeItem({
+        content,
+        sourceType: 'metrics',
+        sourceUrl: `https://defillama.com/yields?project=${pool.project}`,
+        sourceId,
+        category: 'metrics',
+        importance: pool.apy > 20 ? 0.6 : 0.4,
+        publishedAt: new Date(),
+      });
+      added++;
+    } catch (e) {
+      console.error(`Failed to add yield for ${pool.pool}:`, e);
+    }
+  }
+  
+  return added;
+}
+
+/**
+ * Ingest all DeFiLlama data into knowledge store
+ */
+export async function ingestAllDeFiLlamaData(): Promise<{ protocols: number; yields: number }> {
+  console.log('[DeFiLlama] Starting knowledge ingestion...');
+  
+  const protocols = await ingestProtocolMetrics();
+  const yields = await ingestYieldData();
+  
+  console.log(`[DeFiLlama] Added ${protocols} protocol metrics, ${yields} yield pools to knowledge store`);
+  
+  return { protocols, yields };
 }
