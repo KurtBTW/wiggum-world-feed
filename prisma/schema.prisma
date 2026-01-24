@@ -1,4 +1,4 @@
-// HypurrRelevancy - Database Schema
+// Last Network - Database Schema
 // PostgreSQL for production
 
 generator client {
@@ -10,6 +10,272 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+// ============================================
+// AUTH MODELS (NextAuth.js)
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  
+  role          UserRole  @default(APPLICANT)
+  
+  accounts      Account[]
+  sessions      Session[]
+  applications  Application[]
+  memberships   NetworkMember[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  APPLICANT
+  MEMBER
+  ADMIN
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  AI_SCREENING
+  NEEDS_INFO
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum TweetCategory {
+  ANNOUNCEMENT
+  METRICS
+  COMMENTARY
+  THREAD
+  NOISE
+  UNCATEGORIZED
+}
+
+enum AccountType {
+  PROTOCOL
+  FOUNDER
+  TEAM
+}
+
+// ============================================
+// LAST NETWORK MODELS
+// ============================================
+
+// Network member (approved project/protocol)
+model NetworkMember {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  // Basic info
+  name            String
+  slug            String   @unique
+  logo            String?
+  website         String
+  twitter         String?
+  discord         String?
+  github          String?
+  description     String   @db.Text
+  
+  // Classification
+  category        String   // lending, dex, derivatives, infrastructure, tooling, analytics
+  stage           String   // live, testnet, building
+  
+  // Network participation
+  seeking         String[] // listing, lp_intros, distribution, other
+  offering        String[] // liquidity, integration, other
+  
+  // From application
+  applicationId   String?  @unique
+  application     Application? @relation(fields: [applicationId], references: [id])
+  
+  joinedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  twitterAccounts TwitterAccount[]
+  
+  @@index([category])
+  @@index([stage])
+  @@index([userId])
+}
+
+model TwitterAccount {
+  id              String      @id @default(uuid())
+  username        String      @unique
+  displayName     String
+  profileImageUrl String?
+  twitterId       String?     @unique
+  
+  accountType     AccountType @default(PROTOCOL)
+  personName      String?
+  personRole      String?
+  
+  memberId        String?
+  member          NetworkMember? @relation(fields: [memberId], references: [id])
+  
+  isActive        Boolean     @default(true)
+  lastFetchedAt   DateTime?
+  
+  tweets          Tweet[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([memberId])
+  @@index([isActive])
+}
+
+model Tweet {
+  id              String        @id @default(uuid())
+  tweetId         String        @unique
+  
+  accountId       String
+  account         TwitterAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  text            String        @db.Text
+  category        TweetCategory @default(UNCATEGORIZED)
+  categoryReason  String?
+  
+  isThread        Boolean       @default(false)
+  threadId        String?
+  replyToId       String?
+  
+  likeCount       Int           @default(0)
+  retweetCount    Int           @default(0)
+  replyCount      Int           @default(0)
+  viewCount       Int?
+  
+  mediaUrls       String[]
+  urls            String[]
+  mentions        String[]
+  hashtags        String[]
+  
+  isHidden        Boolean       @default(false)
+  isPinned        Boolean       @default(false)
+  
+  publishedAt     DateTime
+  fetchedAt       DateTime      @default(now())
+  classifiedAt    DateTime?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([accountId])
+  @@index([category])
+  @@index([publishedAt])
+  @@index([isHidden])
+}
+
+// Application for network membership
+model Application {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  // Project info
+  projectName     String
+  website         String
+  twitter         String?
+  discord         String?
+  github          String?
+  contactEmail    String
+  
+  // Details
+  description     String   @db.Text
+  teamInfo        String   @db.Text
+  stage           String   // live, testnet, building
+  category        String   // lending, dex, derivatives, infrastructure, tooling, analytics
+  
+  // What they seek
+  seekingListing      Boolean @default(false)
+  seekingLPIntros     Boolean @default(false)
+  seekingDistribution Boolean @default(false)
+  seekingOther        String?
+  
+  // What they offer
+  offeringLiquidity   Boolean @default(false)
+  offeringIntegration Boolean @default(false)
+  offeringOther       String?
+  
+  // Proof of work
+  proofOfWork     String?  @db.Text
+  logoUrl         String?
+  attachmentUrls  String[]
+  
+  // AI Screening
+  aiScore         Int?
+  aiSummary       String?  @db.Text
+  aiFlags         String[]
+  aiScreenedAt    DateTime?
+  
+  // Review
+  status          ApplicationStatus @default(DRAFT)
+  reviewerNotes   String?  @db.Text
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  
+  // If approved, link to member
+  member          NetworkMember?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============================================
+// NEWS AGGREGATOR MODELS (preserved)
+// ============================================
 
 // Ingested items from RSS feeds and APIs
 model IngestedItem {
