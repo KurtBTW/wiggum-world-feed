@@ -7,11 +7,12 @@ import { formatUnits } from 'viem';
 import { LoopingDeposit } from '@/components/LoopingDeposit';
 import { LOOPING_CONTRACTS } from '@/services/looping';
 import { LHYPE_TOKEN_ABI } from '@/lib/abis';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { data: hypeBalance, isLoading: hypeLoading, refetch: refetchHype } = useBalance({
     address,
@@ -27,13 +28,24 @@ export default function DashboardPage() {
     },
   });
 
-  const handleDepositSuccess = () => {
-    setTimeout(() => {
+  const handleDepositSuccess = useCallback(() => {
+    setIsRefreshing(true);
+    
+    const refetchAll = () => {
       refetchHype();
       refetchLhype();
+    };
+    
+    refetchAll();
+    setTimeout(refetchAll, 2000);
+    setTimeout(refetchAll, 5000);
+    setTimeout(refetchAll, 10000);
+    setTimeout(() => {
+      refetchAll();
       setRefreshKey(k => k + 1);
-    }, 2000);
-  };
+      setIsRefreshing(false);
+    }, 15000);
+  }, [refetchHype, refetchLhype]);
 
   const formattedLhype = lhypeBalance 
     ? parseFloat(formatUnits(lhypeBalance as bigint, 18))
@@ -126,7 +138,15 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <h2 className="text-xl font-semibold text-white mb-4">Your Positions</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-white">Your Positions</h2>
+                  {isRefreshing && (
+                    <div className="flex items-center gap-2 text-sm text-[#50e2c3]">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Updating...</span>
+                    </div>
+                  )}
+                </div>
                 {formattedLhype > 0 ? (
                   <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -152,6 +172,18 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-zinc-500">Estimated APY</span>
                         <span className="text-[#50e2c3] font-medium">~3.42%</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : isRefreshing ? (
+                  <div className="bg-white/[0.02] border border-[#50e2c3]/20 rounded-2xl p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50e2c3] to-[#3fcbac] flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 text-black animate-spin" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">Deposit Processing</p>
+                        <p className="text-sm text-zinc-500">Your LHYPE will appear shortly...</p>
                       </div>
                     </div>
                   </div>
