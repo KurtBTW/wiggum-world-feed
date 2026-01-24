@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { 
   Loader2, RefreshCw, Newspaper, Megaphone, BarChart3, 
   MessageSquare, BookOpen, AlertCircle, Zap, Users, User, 
-  Shield, LogOut, Network
+  Shield, LogOut, Network, Wallet
 } from 'lucide-react';
 import { CategoryCard, CompactTweetCard, Tweet } from '@/components/TweetCard';
 import { PriceTicker } from '@/components/PriceTicker';
@@ -102,6 +102,13 @@ export default function FeedPage() {
           </Link>
           
           <div className="flex items-center gap-1">
+            <Link
+              href="/network/dashboard"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <Wallet className="w-4 h-4" />
+              Dashboard
+            </Link>
             <Link
               href="/network"
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"

@@ -6,8 +6,10 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Loader2, ArrowLeft, Globe, Twitter, MessageCircle, Github,
-  ExternalLink, Building2, Calendar, Tag, Users, Newspaper, Sparkles
+  ExternalLink, Building2, Calendar, Tag, Users, Newspaper, Sparkles,
+  Network, Wallet, User, Shield, LogOut
 } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 
 interface TeamMember {
   id: string;
@@ -74,6 +76,9 @@ export default function MemberProfilePage() {
   const [member, setMember] = useState<Member | null>(null);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const userRole = (session?.user as { role?: string })?.role;
+  const isAdmin = userRole === 'ADMIN';
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
@@ -123,15 +128,75 @@ export default function MemberProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <Link
-          href="/network"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-8 transition-colors"
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      <nav className="h-14 border-b border-white/[0.06] bg-[#0a0a0a] flex items-center px-4 justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-6">
+          <Link href="/network" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#50e2c3] to-[#3fcbac] flex items-center justify-center">
+              <Network className="w-5 h-5 text-black" />
+            </div>
+            <span className="font-bold text-white">Last Network</span>
+          </Link>
+          
+          <div className="flex items-center gap-1">
+            <Link
+              href="/network/dashboard"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <Wallet className="w-4 h-4" />
+              Dashboard
+            </Link>
+            <Link
+              href="/network"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              Directory
+            </Link>
+            <Link
+              href="/network/feed"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <Newspaper className="w-4 h-4" />
+              Feed
+            </Link>
+            <Link
+              href="/status"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <User className="w-4 h-4" />
+              Profile
+            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </Link>
+            )}
+          </div>
+        </div>
+        
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Directory
-        </Link>
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
+      </nav>
+
+      <div className="flex-1 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Link
+            href="/network"
+            className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-8 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Directory
+          </Link>
 
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
           <div className="p-8 border-b border-white/[0.06]">
@@ -367,6 +432,7 @@ export default function MemberProfilePage() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
