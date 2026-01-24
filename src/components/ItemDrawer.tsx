@@ -8,7 +8,7 @@ import type { TileItem } from '@/types';
 interface ItemDrawerProps {
   item: TileItem | null;
   onClose: () => void;
-  onExplain: () => void;
+  onExplain?: () => void;
 }
 
 export function ItemDrawer({ item, onClose, onExplain }: ItemDrawerProps) {
@@ -86,16 +86,17 @@ export function ItemDrawer({ item, onClose, onExplain }: ItemDrawerProps) {
           </a>
         </div>
 
-        {/* Actions */}
-        <div className="p-5 border-t border-white/[0.06] bg-white/[0.01]">
-          <button
-            onClick={onExplain}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all gradient-border bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 text-white"
-          >
-            <Sparkles className="w-4 h-4 text-[#fbbf24]" />
-            <span>Summarize with AI</span>
-          </button>
-        </div>
+        {onExplain && (
+          <div className="p-5 border-t border-white/[0.06] bg-white/[0.01]">
+            <button
+              onClick={onExplain}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all gradient-border bg-gradient-to-r from-[#fbbf24]/10 to-[#22c55e]/10 hover:from-[#fbbf24]/20 hover:to-[#22c55e]/20 text-white"
+            >
+              <Sparkles className="w-4 h-4 text-[#fbbf24]" />
+              <span>Summarize with AI</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
