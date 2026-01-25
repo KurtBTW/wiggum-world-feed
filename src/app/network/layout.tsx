@@ -8,7 +8,7 @@ import {
   ChevronRight, Shield, Loader2, Wallet 
 } from 'lucide-react';
 
-const APP_VERSION = 'v1.0.2-lhype-fix';
+const APP_VERSION = 'v1.0.3';
 
 interface NavItem {
   href: string;
