@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   Loader2, ArrowLeft, Globe, Twitter, MessageCircle, Github,
   ExternalLink, Building2, Calendar, Tag, Users, Newspaper,
-  Network, Wallet, User, Flame, Terminal
+  Network, Wallet, Flame, Terminal
 } from 'lucide-react';
 
 interface TeamMember {
@@ -156,13 +156,6 @@ export default function MemberProfilePage() {
             >
               <Terminal className="w-4 h-4" />
               Command Center
-            </Link>
-            <Link
-              href="/status"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
-            >
-              <User className="w-4 h-4" />
-              Profile
             </Link>
           </div>
         </div>

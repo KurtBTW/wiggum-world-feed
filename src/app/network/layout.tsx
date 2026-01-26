@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  Network, Users, User, 
+  Network, Users, 
   ChevronRight, Wallet, Flame, ExternalLink, Terminal 
 } from 'lucide-react';
 
@@ -21,7 +21,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/network', label: 'Directory', icon: <Users className="w-5 h-5" /> },
   { href: 'https://hypurrrelevancy.vercel.app/', label: 'Major News', icon: <Flame className="w-5 h-5" />, external: true },
   { href: '/network/feed', label: 'Command Center', icon: <Terminal className="w-5 h-5" /> },
-  { href: '/status', label: 'Portfolio', icon: <User className="w-5 h-5" /> },
 ];
 
 export default function NetworkLayout({

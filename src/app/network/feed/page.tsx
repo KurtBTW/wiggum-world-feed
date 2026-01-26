@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { 
-  Loader2, RefreshCw, Zap, Users, User, 
+  Loader2, RefreshCw, Zap, Users, 
   Network, Wallet, Flame, ExternalLink, Terminal,
   ChevronLeft, ChevronRight, TrendingUp, Bitcoin, Cat
 } from 'lucide-react';
@@ -249,13 +249,6 @@ export default function FeedPage() {
               <Terminal className="w-4 h-4" />
               Command Center
             </span>
-            <Link
-              href="/status"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
-            >
-              <User className="w-4 h-4" />
-              Profile
-            </Link>
           </div>
         </div>
         
