@@ -24,6 +24,7 @@ interface AssetConfig {
   color: string;
   gradient: string;
   icon: React.ReactNode;
+  imageUrl?: string;
   description: string;
   website?: string;
   twitter?: string;
@@ -109,6 +110,23 @@ export default function FeedPage() {
 
   const assets: AssetConfig[] = [
     {
+      id: 'hypurrfi',
+      symbol: 'HypurrFi',
+      name: 'HypurrFi',
+      type: 'protocol',
+      noChart: true,
+      externalUrl: 'https://app.hypurr.fi/markets/pooled',
+      tvl: yields?.hypurrfi?.tvlUsd || 0,
+      color: '#FF6B35',
+      gradient: 'from-[#FF6B35] to-[#F7931A]',
+      icon: <Cat className="w-5 h-5 text-white" />,
+      imageUrl: 'https://raw.githubusercontent.com/hypurrfi/brand-assets/main/hypurrfi/hypurrfi-wordmark-black-bg.png',
+      description: 'HypurrFi is a pooled trading vault on Hyperliquid. Deposit USDC to earn yield from automated trading strategies.',
+      website: 'https://hypurr.fi',
+      twitter: '@hypaboratory',
+      depositAsset: 'USDC',
+    },
+    {
       id: 'hype',
       symbol: 'HYPE',
       name: 'Hyperliquid',
@@ -180,22 +198,6 @@ export default function FeedPage() {
       website: 'https://liminal.money',
       twitter: '@limaboratory',
       description: 'Delta-neutral yield vault for BTC exposure. Earn yield on Bitcoin with market-neutral strategies.',
-    },
-    {
-      id: 'hypurrfi',
-      symbol: 'HypurrFi',
-      name: 'HypurrFi',
-      type: 'protocol',
-      noChart: true,
-      externalUrl: 'https://app.hypurr.fi/markets/pooled',
-      tvl: yields?.hypurrfi?.tvlUsd || 0,
-      color: '#FF6B35',
-      gradient: 'from-[#FF6B35] to-[#F7931A]',
-      icon: <Cat className="w-5 h-5 text-white" />,
-      description: 'HypurrFi is a pooled trading vault on Hyperliquid. Deposit USDC to earn yield from automated trading strategies.',
-      website: 'https://hypurr.fi',
-      twitter: '@hypaboratory',
-      depositAsset: 'USDC',
     },
   ];
 
@@ -281,13 +283,17 @@ export default function FeedPage() {
                     : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
                 }`}
               >
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${asset.gradient} flex items-center justify-center`}>
-                  {asset.icon}
-                </div>
+                {asset.imageUrl ? (
+                  <img src={asset.imageUrl} alt={asset.name} className="w-7 h-7 rounded-lg object-contain" />
+                ) : (
+                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${asset.gradient} flex items-center justify-center`}>
+                    {asset.icon}
+                  </div>
+                )}
                 <div className="text-left">
                   <p className="text-sm font-medium text-white">{asset.symbol}</p>
                 </div>
-                {asset.type === 'protocol' && asset.apy !== undefined && (
+                {asset.type === 'protocol' && asset.apy !== undefined && !asset.noChart && (
                   <div className="text-right pl-2 border-l border-white/[0.06]">
                     <p className="text-sm font-bold text-[#50e2c3]">{asset.apy > 0 ? `${asset.apy.toFixed(1)}%` : '—'}</p>
                   </div>

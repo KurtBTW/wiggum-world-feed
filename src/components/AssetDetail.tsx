@@ -48,6 +48,7 @@ interface AssetConfig {
   color: string;
   gradient: string;
   icon: React.ReactNode;
+  imageUrl?: string;
   description: string;
   website?: string;
   twitter?: string;
@@ -228,9 +229,13 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
     <div className="h-full overflow-auto">
       <div className="p-6">
         <div className="flex items-center gap-4 mb-4">
-          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${asset.gradient} flex items-center justify-center`}>
-            {asset.icon}
-          </div>
+          {asset.imageUrl ? (
+            <img src={asset.imageUrl} alt={asset.name} className="w-14 h-14 rounded-xl object-contain" />
+          ) : (
+            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${asset.gradient} flex items-center justify-center`}>
+              {asset.icon}
+            </div>
+          )}
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-white">{asset.symbol}</h1>
             <p className="text-sm text-zinc-500">{asset.name}</p>
@@ -260,11 +265,11 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
               </p>
             </div>
 
-            {hasMarketData && (
+            {hasMarketData && !asset.noChart && (
               <div className="grid grid-cols-5 gap-2 mb-6 p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
                 <div className="text-center">
-                  <p className="text-xs text-zinc-500 mb-1">Mkt Cap</p>
-                  <p className="text-sm font-semibold text-white">{formatLargeNumber(marketData.marketCap)}</p>
+                  <p className="text-xs text-zinc-500 mb-1">TVL</p>
+                  <p className="text-sm font-semibold text-white">{asset.tvl ? formatLargeNumber(asset.tvl) : formatLargeNumber(marketData.marketCap)}</p>
                 </div>
                 <div className="text-center border-l border-white/[0.06]">
                   <p className="text-xs text-zinc-500 mb-1">24H Volume</p>
@@ -281,6 +286,15 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
                 <div className="text-center border-l border-white/[0.06]">
                   <p className="text-xs text-zinc-500 mb-1">Total Supply</p>
                   <p className="text-sm font-semibold text-white">{formatSupply(marketData.totalSupply)}</p>
+                </div>
+              </div>
+            )}
+
+            {asset.noChart && asset.tvl !== undefined && asset.tvl > 0 && (
+              <div className="mb-6 p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+                <div className="text-center">
+                  <p className="text-xs text-zinc-500 mb-1">Total Value Locked</p>
+                  <p className="text-3xl font-bold text-white">{formatLargeNumber(asset.tvl)}</p>
                 </div>
               </div>
             )}
