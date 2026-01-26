@@ -11,6 +11,7 @@ export interface AllYields {
   khype: VaultYield;
   xhype: VaultYield;
   xbtc: VaultYield;
+  hypurrfi: VaultYield;
 }
 
 let cachedYields: AllYields | null = null;
@@ -47,6 +48,12 @@ async function fetchDefiLlamaYields(): Promise<Map<string, { apy: number; tvlUsd
     if (project === 'liminal' && symbol === 'XBTC' && isHyperliquid) {
       if (!yields.has('xbtc') || pool.tvlUsd > (yields.get('xbtc')?.tvlUsd || 0)) {
         yields.set('xbtc', { apy: pool.apy, tvlUsd: pool.tvlUsd });
+      }
+    }
+
+    if ((project === 'hypurr' || project === 'hypurrfi') && isHyperliquid) {
+      if (!yields.has('hypurrfi') || pool.tvlUsd > (yields.get('hypurrfi')?.tvlUsd || 0)) {
+        yields.set('hypurrfi', { apy: pool.apy || 0, tvlUsd: pool.tvlUsd });
       }
     }
     
@@ -101,6 +108,11 @@ export async function fetchAllYields(): Promise<AllYields> {
         tvlUsd: xbtcData?.tvlUsd || 0,
         source: xbtcData ? 'defillama' : 'fallback',
       },
+      hypurrfi: {
+        apy: 0,
+        tvlUsd: defiLlamaYields.get('hypurrfi')?.tvlUsd || 0,
+        source: defiLlamaYields.has('hypurrfi') ? 'defillama' : 'fallback',
+      },
     };
     
     cacheTimestamp = now;
@@ -113,6 +125,7 @@ export async function fetchAllYields(): Promise<AllYields> {
       khype: { apy: 4.0, tvlUsd: 0, source: 'fallback' },
       xhype: { apy: 4.5, tvlUsd: 3_800_000, source: 'fallback' },
       xbtc: { apy: 4.0, tvlUsd: 0, source: 'fallback' },
+      hypurrfi: { apy: 0, tvlUsd: 0, source: 'fallback' },
     };
   }
 }

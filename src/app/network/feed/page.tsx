@@ -6,7 +6,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { 
   Loader2, RefreshCw, Zap, Users, User, 
   Network, Wallet, Flame, ExternalLink, Terminal,
-  ChevronLeft, ChevronRight, TrendingUp, Bitcoin
+  ChevronLeft, ChevronRight, TrendingUp, Bitcoin, Cat
 } from 'lucide-react';
 import { CompactTweetCard, Tweet } from '@/components/TweetCard';
 import { PriceTicker } from '@/components/PriceTicker';
@@ -31,6 +31,8 @@ interface AssetConfig {
   apy?: number;
   tvl?: number;
   depositAsset?: string;
+  noChart?: boolean;
+  externalUrl?: string;
 }
 
 export default function FeedPage() {
@@ -178,6 +180,22 @@ export default function FeedPage() {
       website: 'https://liminal.money',
       twitter: '@limaboratory',
       description: 'Delta-neutral yield vault for BTC exposure. Earn yield on Bitcoin with market-neutral strategies.',
+    },
+    {
+      id: 'hypurrfi',
+      symbol: 'HypurrFi',
+      name: 'HypurrFi',
+      type: 'protocol',
+      noChart: true,
+      externalUrl: 'https://app.hypurr.fi/markets/pooled',
+      tvl: yields?.hypurrfi?.tvlUsd || 0,
+      color: '#FF6B35',
+      gradient: 'from-[#FF6B35] to-[#F7931A]',
+      icon: <Cat className="w-5 h-5 text-white" />,
+      description: 'HypurrFi is a pooled trading vault on Hyperliquid. Deposit USDC to earn yield from automated trading strategies.',
+      website: 'https://hypurr.fi',
+      twitter: '@hypaboratory',
+      depositAsset: 'USDC',
     },
   ];
 

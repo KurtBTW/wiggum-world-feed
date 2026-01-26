@@ -19,6 +19,7 @@ import { CompactTweetCard, Tweet } from '@/components/TweetCard';
 import { LoopingDeposit } from '@/components/LoopingDeposit';
 import { KinetiqDeposit } from '@/components/KinetiqDeposit';
 import { LiminalDeposit } from '@/components/LiminalDeposit';
+import { HypurrFiDeposit } from '@/components/HypurrFiDeposit';
 
 interface MarketData {
   symbol: string;
@@ -54,6 +55,8 @@ interface AssetConfig {
   apy?: number;
   tvl?: number;
   depositAsset?: string;
+  noChart?: boolean;
+  externalUrl?: string;
 }
 
 interface AssetDetailProps {
@@ -90,7 +93,7 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
   const { isConnected } = useAccount();
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'chart' | 'news' | 'info'>('chart');
+  const [activeTab, setActiveTab] = useState<'chart' | 'news' | 'info'>(asset.noChart ? 'info' : 'chart');
   const [timeframe, setTimeframe] = useState<string>('1D');
   const [chartLoading, setChartLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -308,17 +311,19 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
             )}
 
             <div className="flex items-center gap-1 mb-4 border-b border-white/[0.06]">
-              <button
-                onClick={() => setActiveTab('chart')}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'chart' 
-                    ? 'text-[#50e2c3] border-b-2 border-[#50e2c3]' 
-                    : 'text-zinc-500 hover:text-white'
-                }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                Chart
-              </button>
+              {!asset.noChart && (
+                <button
+                  onClick={() => setActiveTab('chart')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === 'chart' 
+                      ? 'text-[#50e2c3] border-b-2 border-[#50e2c3]' 
+                      : 'text-zinc-500 hover:text-white'
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  Chart
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('news')}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
@@ -343,7 +348,7 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
               </button>
             </div>
 
-            {activeTab === 'chart' && (
+            {activeTab === 'chart' && !asset.noChart && (
               <div>
                 <div className="flex gap-2 mb-4">
                   {TIMEFRAMES.map((tf) => (
@@ -459,7 +464,22 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
             {asset.type === 'protocol' && (
               <div className="mt-6 p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
                 <h3 className="text-sm font-medium text-white mb-4">Deposit</h3>
-                {isConnected ? (
+                {asset.externalUrl ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-zinc-400">
+                      Deposit directly on the {asset.name} platform.
+                    </p>
+                    <a
+                      href={asset.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931A] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                      Open {asset.name} App
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                ) : isConnected ? (
                   <div>
                     {asset.id === 'lhype' && (
                       <LoopingDeposit key={`looping-${refreshKey}`} onSuccess={handleDepositSuccess} />
@@ -469,6 +489,9 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
                     )}
                     {(asset.id === 'xhype' || asset.id === 'xbtc') && (
                       <LiminalDeposit key={`liminal-${refreshKey}`} onSuccess={handleDepositSuccess} />
+                    )}
+                    {asset.id === 'hypurrfi' && (
+                      <HypurrFiDeposit key={`hypurrfi-${refreshKey}`} onSuccess={handleDepositSuccess} />
                     )}
                   </div>
                 ) : (
