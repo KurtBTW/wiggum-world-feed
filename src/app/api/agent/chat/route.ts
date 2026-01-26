@@ -1,15 +1,30 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { searchKnowledge } from '@/services/embeddings';
+import { parseDepositIntent, generateDepositResponse, getVaultDisplayInfo, WalletContext } from '@/lib/depositIntentParser';
+
+export interface DepositAction {
+  type: 'deposit_action';
+  vault: 'lhype' | 'khype' | 'xhype' | 'xbtc';
+  amount: string;
+  stablecoin?: 'USDC' | 'USDT0';
+  vaultInfo: {
+    name: string;
+    token: string;
+    apy: string;
+    depositAsset: string;
+  };
+}
 
 const SYSTEM_PROMPT = `You are Last Agent, an AI assistant for Last Network - a gated DeFi membership network on Hyperliquid.
 
-Your role is to help users understand:
-- Partner protocols and their recent activities
-- Announcements and updates from the network
-- Market insights and protocol comparisons
-- How to engage with the Last Network ecosystem
-- Yield opportunities and vault strategies on HyperEVM
+Your role is to help users:
+- Understand partner protocols and their recent activities
+- Make deposits into yield vaults (you can execute these!)
+- Get announcements and updates from the network
+- Analyze market insights and protocol comparisons
+- Navigate the Last Network ecosystem
+- Find yield opportunities and vault strategies on HyperEVM
 
 You have access to real-time tweets, announcements, and on-chain metrics from partner protocols. When answering questions:
 1. Base your responses on the provided context (marked with [1], [2], etc.)
@@ -17,20 +32,20 @@ You have access to real-time tweets, announcements, and on-chain metrics from pa
 3. ALWAYS cite your sources using [1], [2], etc. when referencing specific information
 4. If you don't have information about something, say so honestly
 5. Be helpful and guide users toward relevant protocols or opportunities
-6. When discussing metrics (TVL, APY, etc.), cite the DeFiLlama source
+6. When discussing metrics (TVL, APY, etc.), cite sources when available
+
+AVAILABLE YIELD VAULTS (you can help users deposit into these):
+1. **Kinetiq (kHYPE)** - Variable APY, deposit native HYPE, liquid staking protocol
+2. **Looping Collective (LHYPE)** - Variable APY, deposit native HYPE, automated looping strategy
+3. **Liminal xHYPE** - Variable APY, deposit USDC/USDT0, delta-neutral HYPE exposure
+4. **Liminal xBTC** - Variable APY, deposit USDC/USDT0, delta-neutral BTC exposure
+
+When users want to deposit, stake, or earn yield:
+- If they specify a vault and amount, confirm you'll help them execute it
+- If they're unsure which vault, explain the options and APYs
+- Mention they can say things like "deposit 10 HYPE into Kinetiq" or "stake 100 HYPE"
 
 The Last Network includes protocols in: lending, DEXes, derivatives, infrastructure, tooling, and analytics.
-
-IMPORTANT - LOOPED HYPE (LHYPE) INTEGRATION:
-Last Network has integrated Looping Collective's LHYPE vault directly into the Dashboard. Users can:
-- Deposit HYPE to receive LHYPE (Looped HYPE) earning ~3.4% APY
-- LHYPE uses an automated looping strategy across HyperLend, HypurrFi, Felix, and Pendle
-- TVL is over $21M with institutional-grade security via Nucleus vault infrastructure
-- Deposits can be made directly from the Dashboard without leaving Last Network
-- Withdrawals have a 3-day processing time
-
-When users ask about yield, earning on HYPE, or what to do with their HYPE, proactively mention:
-"You can deposit HYPE directly from the Dashboard to earn ~3.4% APY with Looped HYPE. Just go to Dashboard, connect your wallet, and use the deposit form."
 
 Example response format:
 "HypurrFi recently announced a new vault strategy [1] which has seen TVL growth of 40% [2]. The team has been focused on..."
@@ -38,9 +53,47 @@ Example response format:
 Remember: "The last network you'll ever need."`;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, walletContext } = await req.json();
   
+  const typedWalletContext: WalletContext | undefined = walletContext;
   const lastUserMessage = messages.filter((m: { role: string }) => m.role === 'user').pop();
+  
+  if (lastUserMessage) {
+    const depositIntent = parseDepositIntent(lastUserMessage.content, typedWalletContext);
+    
+    if (depositIntent.detected && depositIntent.vault && depositIntent.amount) {
+      const vaultInfo = getVaultDisplayInfo(depositIntent.vault);
+      const action: DepositAction = {
+        type: 'deposit_action',
+        vault: depositIntent.vault,
+        amount: depositIntent.amount,
+        stablecoin: depositIntent.stablecoin,
+        vaultInfo: {
+          name: vaultInfo.name,
+          token: vaultInfo.token,
+          apy: vaultInfo.apy,
+          depositAsset: vaultInfo.depositAsset,
+        },
+      };
+      
+      return Response.json({
+        action,
+        message: `I'll help you deposit ${depositIntent.amount} ${vaultInfo.depositAsset} into ${vaultInfo.name} (${vaultInfo.apy} APY). Please confirm the transaction below.`,
+      });
+    }
+    
+    if (depositIntent.detected && !depositIntent.vault) {
+      return Response.json({
+        message: generateDepositResponse(depositIntent),
+      });
+    }
+    
+    if (depositIntent.detected && !depositIntent.amount) {
+      return Response.json({
+        message: generateDepositResponse(depositIntent),
+      });
+    }
+  }
   
   let context = '';
   
@@ -55,9 +108,20 @@ export async function POST(req: Request) {
     }
   }
   
+  let walletInfo = '';
+  if (typedWalletContext?.address) {
+    walletInfo = `\n\nUSER WALLET INFO:
+- Address: ${typedWalletContext.address}
+- HYPE Balance: ${parseFloat(typedWalletContext.hypeBalance).toFixed(4)} HYPE
+- USDC Balance: ${parseFloat(typedWalletContext.usdcBalance).toFixed(2)} USDC
+- USDT0 Balance: ${parseFloat(typedWalletContext.usdt0Balance).toFixed(2)} USDT0
+
+When the user asks to deposit "all", "half", or a percentage, calculate the actual amount from their balance.`;
+  }
+  
   const result = streamText({
     model: openai('gpt-4o'),
-    system: SYSTEM_PROMPT + context,
+    system: SYSTEM_PROMPT + walletInfo + context,
     messages,
   });
 

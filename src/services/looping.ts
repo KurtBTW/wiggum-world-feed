@@ -21,7 +21,7 @@ export async function fetchLHYPEData(): Promise<LHYPEData> {
   
   return {
     rewardRate: data.reward_rate || 0,
-    apy: (data.reward_rate || 0) * 100,
+    apy: data.reward_rate || 0,
     tvl: data.assets_under_management || 0,
     tvlUsd: data.assets_under_management || 0,
     exchangeRate: data.exchange_ratio || 1,

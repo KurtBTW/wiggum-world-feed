@@ -1,15 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Loader2, ArrowLeft, Globe, Twitter, MessageCircle, Github,
-  ExternalLink, Building2, Calendar, Tag, Users, Newspaper, Sparkles,
-  Network, Wallet, User, Shield, LogOut
+  ExternalLink, Building2, Calendar, Tag, Users, Newspaper,
+  Network, Wallet, User, Flame, Terminal
 } from 'lucide-react';
-import { signOut } from 'next-auth/react';
 
 interface TeamMember {
   id: string;
@@ -68,29 +66,18 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 export default function MemberProfilePage() {
-  const { data: session, status: authStatus } = useSession();
-  const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
 
   const [member, setMember] = useState<Member | null>(null);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  const userRole = (session?.user as { role?: string })?.role;
-  const isAdmin = userRole === 'ADMIN';
 
   useEffect(() => {
-    if (authStatus === 'unauthenticated') {
-      router.push('/auth/signin?callbackUrl=/network');
-    }
-  }, [authStatus, router]);
-
-  useEffect(() => {
-    if (authStatus === 'authenticated' && slug) {
+    if (slug) {
       fetchMember();
     }
-  }, [authStatus, slug]);
+  }, [slug]);
 
   const fetchMember = async () => {
     try {
@@ -106,7 +93,7 @@ export default function MemberProfilePage() {
     }
   };
 
-  if (authStatus === 'loading' || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-[#50e2c3] animate-spin" />
@@ -153,12 +140,22 @@ export default function MemberProfilePage() {
               <Users className="w-4 h-4" />
               Directory
             </Link>
+            <a
+              href="https://hypurrrelevancy.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            >
+              <Flame className="w-4 h-4" />
+              Major News
+              <ExternalLink className="w-3 h-3 text-zinc-500" />
+            </a>
             <Link
               href="/network/feed"
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
             >
-              <Newspaper className="w-4 h-4" />
-              Feed
+              <Terminal className="w-4 h-4" />
+              Command Center
             </Link>
             <Link
               href="/status"
@@ -167,25 +164,8 @@ export default function MemberProfilePage() {
               <User className="w-4 h-4" />
               Profile
             </Link>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
-              >
-                <Shield className="w-4 h-4" />
-                Admin
-              </Link>
-            )}
           </div>
         </div>
-        
-        <button
-          onClick={() => signOut({ callbackUrl: '/' })}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Sign Out
-        </button>
       </nav>
 
       <div className="flex-1 py-8 px-4">

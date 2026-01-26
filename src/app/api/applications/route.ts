@@ -1,38 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
+    const data = await request.json();
+
+    if (!data.projectName || !data.website || !data.contactEmail || !data.description || !data.category || !data.stage) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
     const existingApplication = await prisma.application.findFirst({
       where: {
-        userId: session.user.id,
+        contactEmail: data.contactEmail,
         status: { notIn: ['REJECTED'] },
       },
     });
 
     if (existingApplication) {
       return NextResponse.json(
-        { error: 'You already have a pending application' },
+        { error: 'An application with this email already exists' },
         { status: 400 }
       );
     }
 
-    const data = await request.json();
-
     const application = await prisma.application.create({
       data: {
-        userId: session.user.id,
         projectName: data.projectName,
         website: data.website,
         contactEmail: data.contactEmail,
@@ -65,36 +60,6 @@ export async function POST(request: NextRequest) {
     console.error('Application submission error:', error);
     return NextResponse.json(
       { error: 'Failed to submit application' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const application = await prisma.application.findFirst({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (!application) {
-      return NextResponse.json({ application: null });
-    }
-
-    return NextResponse.json({ application });
-  } catch (error) {
-    console.error('Application fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch application' },
       { status: 500 }
     );
   }

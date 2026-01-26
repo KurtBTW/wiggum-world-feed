@@ -399,9 +399,17 @@ export function CompactTweetCard({ tweet }: { tweet: Tweet }) {
     >
       <div className="flex items-start gap-2">
         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
-          <span className="text-[10px] font-bold text-white">
-            {tweet.account.displayName[0]}
-          </span>
+          {tweet.account.profileImageUrl ? (
+            <img 
+              src={tweet.account.profileImageUrl} 
+              alt={tweet.account.displayName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-[10px] font-bold text-white">
+              {tweet.account.displayName[0]}
+            </span>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 mb-0.5">

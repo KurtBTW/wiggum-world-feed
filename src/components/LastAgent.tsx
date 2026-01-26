@@ -3,13 +3,232 @@
 import { useState, useRef, useEffect } from 'react';
 import { 
   MessageCircle, X, Send, Loader2, Sparkles, 
-  Maximize2, Minimize2 
+  Maximize2, Minimize2, Wallet, CheckCircle, XCircle, ExternalLink, ArrowRight
 } from 'lucide-react';
+import { useChatDeposit, VaultType } from '@/contexts/ChatDepositContext';
+import type { DepositAction } from '@/app/api/agent/chat/route';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  action?: DepositAction;
+}
+
+function DepositCard({ 
+  action, 
+  onComplete, 
+  onCancel 
+}: { 
+  action: DepositAction; 
+  onComplete: () => void; 
+  onCancel: () => void;
+}) {
+  const { 
+    isConnected, 
+    hypeBalance, 
+    usdcBalance, 
+    usdt0Balance,
+    depositState,
+    executeDeposit,
+    resetDepositState,
+  } = useChatDeposit();
+  
+  const [selectedStablecoin, setSelectedStablecoin] = useState<'USDC' | 'USDT0'>(
+    action.stablecoin || 'USDC'
+  );
+
+  const isHypeVault = action.vault === 'lhype' || action.vault === 'khype';
+  const currentBalance = isHypeVault 
+    ? hypeBalance 
+    : (selectedStablecoin === 'USDC' ? usdcBalance : usdt0Balance);
+  
+  const hasInsufficientBalance = parseFloat(action.amount) > parseFloat(currentBalance);
+
+  useEffect(() => {
+    if (depositState.status === 'success') {
+      const timer = setTimeout(() => {
+        onComplete();
+        resetDepositState();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [depositState.status, onComplete, resetDepositState]);
+
+  const handleDeposit = async () => {
+    await executeDeposit({
+      vault: action.vault as VaultType,
+      amount: action.amount,
+      stablecoin: isHypeVault ? undefined : selectedStablecoin,
+    });
+  };
+
+  const handleCancel = () => {
+    resetDepositState();
+    onCancel();
+  };
+
+  if (!isConnected) {
+    return (
+      <div className="bg-white/[0.03] border border-white/[0.1] rounded-xl p-4 max-w-[320px]">
+        <div className="flex items-center gap-2 text-amber-400 mb-3">
+          <Wallet className="w-5 h-5" />
+          <span className="font-medium">Wallet Required</span>
+        </div>
+        <p className="text-sm text-zinc-400 mb-3">
+          Connect your wallet to make deposits.
+        </p>
+        <button
+          onClick={onCancel}
+          className="w-full px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  if (depositState.status === 'success') {
+    return (
+      <div className="bg-white/[0.03] border border-emerald-500/30 rounded-xl p-4 max-w-[320px]">
+        <div className="flex items-center gap-2 text-emerald-400 mb-3">
+          <CheckCircle className="w-5 h-5" />
+          <span className="font-medium">Deposit Successful!</span>
+        </div>
+        <p className="text-sm text-zinc-400 mb-3">
+          Deposited {action.amount} {isHypeVault ? 'HYPE' : selectedStablecoin} into {action.vaultInfo.name}
+        </p>
+        {depositState.txHash && (
+          <a
+            href={`https://purrsec.com/tx/${depositState.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300"
+          >
+            View transaction <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  if (depositState.status === 'error') {
+    return (
+      <div className="bg-white/[0.03] border border-red-500/30 rounded-xl p-4 max-w-[320px]">
+        <div className="flex items-center gap-2 text-red-400 mb-3">
+          <XCircle className="w-5 h-5" />
+          <span className="font-medium">Deposit Failed</span>
+        </div>
+        <p className="text-sm text-zinc-400 mb-3">
+          {depositState.error || 'Transaction was rejected or failed'}
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={handleDeposit}
+            className="flex-1 px-4 py-2 text-sm bg-white/[0.05] hover:bg-white/[0.1] text-white rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+          <button
+            onClick={handleCancel}
+            className="flex-1 px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isPending = depositState.status === 'pending' || depositState.status === 'confirming';
+
+  return (
+    <div className="bg-white/[0.03] border border-white/[0.1] rounded-xl p-4 max-w-[320px]">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-white">Confirm Deposit</span>
+        <span className="text-xs px-2 py-0.5 bg-[#50e2c3]/20 text-[#50e2c3] rounded-full">
+          {action.vaultInfo.apy} APY
+        </span>
+      </div>
+
+      <div className="bg-black/30 rounded-lg p-3 mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-zinc-500">Amount</span>
+          <span className="text-xs text-zinc-500">
+            Balance: {parseFloat(currentBalance).toFixed(4)} {isHypeVault ? 'HYPE' : selectedStablecoin}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-lg font-bold text-white">{action.amount}</span>
+          <span className="text-sm text-zinc-400">{isHypeVault ? 'HYPE' : selectedStablecoin}</span>
+        </div>
+      </div>
+
+      {!isHypeVault && (
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setSelectedStablecoin('USDC')}
+            disabled={isPending}
+            className={`flex-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+              selectedStablecoin === 'USDC'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-white/[0.03] text-zinc-400 hover:bg-white/[0.05]'
+            }`}
+          >
+            USDC
+          </button>
+          <button
+            onClick={() => setSelectedStablecoin('USDT0')}
+            disabled={isPending}
+            className={`flex-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+              selectedStablecoin === 'USDT0'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-white/[0.03] text-zinc-400 hover:bg-white/[0.05]'
+            }`}
+          >
+            USDT0
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 text-xs text-zinc-500 mb-3">
+        <ArrowRight className="w-3 h-3" />
+        <span>Receive {action.vaultInfo.token} from {action.vaultInfo.name}</span>
+      </div>
+
+      {hasInsufficientBalance && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-3">
+          <p className="text-xs text-red-400">
+            Insufficient balance. You have {parseFloat(currentBalance).toFixed(4)} {isHypeVault ? 'HYPE' : selectedStablecoin}
+          </p>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          onClick={handleDeposit}
+          disabled={isPending || hasInsufficientBalance}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#50e2c3] text-black font-medium rounded-lg hover:bg-[#3fcbac] transition-colors disabled:opacity-50"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {depositState.status === 'confirming' ? 'Confirm in wallet...' : 'Processing...'}
+            </>
+          ) : (
+            'Confirm Deposit'
+          )}
+        </button>
+        <button
+          onClick={handleCancel}
+          disabled={isPending}
+          className="px-4 py-2.5 text-sm text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function LastAgent() {
@@ -18,7 +237,10 @@ export function LastAgent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [activeDepositId, setActiveDepositId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { address, isConnected, hypeBalance, usdcBalance, usdt0Balance } = useChatDeposit();
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,6 +261,13 @@ export function LastAgent() {
     setIsLoading(true);
     
     try {
+      const walletContext = isConnected && address ? {
+        address,
+        hypeBalance,
+        usdcBalance,
+        usdt0Balance,
+      } : undefined;
+      
       const response = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,39 +276,59 @@ export function LastAgent() {
             role: m.role,
             content: m.content,
           })),
+          walletContext,
         }),
       });
       
       if (!response.ok) throw new Error('Failed to get response');
       
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
+      const contentType = response.headers.get('content-type');
       
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: '',
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      const decoder = new TextDecoder();
-      let done = false;
-      
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
+      if (contentType?.includes('application/json')) {
+        const data = await response.json();
         
-        if (value) {
-          const chunk = decoder.decode(value);
-          setMessages(prev => {
-            const updated = [...prev];
-            const lastMsg = updated[updated.length - 1];
-            if (lastMsg.role === 'assistant') {
-              lastMsg.content += chunk;
-            }
-            return updated;
-          });
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.message,
+          action: data.action,
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        if (data.action?.type === 'deposit_action') {
+          setActiveDepositId(assistantMessage.id);
+        }
+      } else {
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No response body');
+        
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: '',
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        const decoder = new TextDecoder();
+        let done = false;
+        
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
+          
+          if (value) {
+            const chunk = decoder.decode(value);
+            setMessages(prev => {
+              const updated = [...prev];
+              const lastMsg = updated[updated.length - 1];
+              if (lastMsg.role === 'assistant') {
+                lastMsg.content += chunk;
+              }
+              return updated;
+            });
+          }
         }
       }
     } catch (error) {
@@ -94,6 +343,26 @@ export function LastAgent() {
     }
   };
 
+  const handleDepositComplete = () => {
+    const successMessage: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: '✅ Deposit completed! You can view your updated positions on the Dashboard.',
+    };
+    setMessages(prev => [...prev, successMessage]);
+    setActiveDepositId(null);
+  };
+
+  const handleDepositCancel = () => {
+    const cancelMessage: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: "No problem! Let me know if you'd like to deposit later or have questions about the vaults.",
+    };
+    setMessages(prev => [...prev, cancelMessage]);
+    setActiveDepositId(null);
+  };
+
   const handleClose = () => {
     setIsOpen(false);
     setIsExpanded(false);
@@ -101,11 +370,19 @@ export function LastAgent() {
 
   const clearChat = () => {
     setMessages([]);
+    setActiveDepositId(null);
   };
 
   const handleSuggestion = (suggestion: string) => {
     setInput(suggestion);
   };
+
+  const suggestions = [
+    "Deposit 10 HYPE into Kinetiq",
+    "What are the yield vault options?",
+    "What's happening with HypurrFi?",
+    "Latest announcements from partners",
+  ];
 
   if (!isOpen) {
     return (
@@ -134,7 +411,7 @@ export function LastAgent() {
           </div>
           <div>
             <h3 className="font-semibold text-white">Last Agent</h3>
-            <p className="text-xs text-zinc-500">Your DeFi intelligence assistant</p>
+            <p className="text-xs text-zinc-500">Intelligence + Actions</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -165,14 +442,10 @@ export function LastAgent() {
             </div>
             <h4 className="text-white font-medium mb-2">How can I help you?</h4>
             <p className="text-zinc-500 text-sm mb-6">
-              Ask me about partner protocols, recent announcements, or market insights.
+              I can make deposits, synthesize protocol updates, and answer DeFi questions.
             </p>
             <div className="space-y-2">
-              {[
-                "What's happening with HypurrFi?",
-                "What are the latest announcements?",
-                "Tell me about Euler's recent updates",
-              ].map((suggestion) => (
+              {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => handleSuggestion(suggestion)}
@@ -190,15 +463,23 @@ export function LastAgent() {
             key={message.id}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                message.role === 'user'
-                  ? 'bg-[#50e2c3] text-black'
-                  : 'bg-white/[0.05] text-white'
-              }`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-            </div>
+            {message.role === 'assistant' && activeDepositId === message.id && message.action ? (
+              <DepositCard
+                action={message.action}
+                onComplete={handleDepositComplete}
+                onCancel={handleDepositCancel}
+              />
+            ) : (
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                  message.role === 'user'
+                    ? 'bg-[#50e2c3] text-black'
+                    : 'bg-white/[0.05] text-white'
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              </div>
+            )}
           </div>
         ))}
 
@@ -219,7 +500,7 @@ export function LastAgent() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about protocols, announcements..."
+            placeholder="Ask about protocols or deposit into vaults..."
             className="flex-1 bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#50e2c3]/50"
             disabled={isLoading}
           />

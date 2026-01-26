@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import { Web3Provider } from "@/components/Web3Provider";
+import { ChatDepositProvider } from "@/contexts/ChatDepositContext";
 import { LastAgent } from "@/components/LastAgent";
 
 export const metadata: Metadata = {
@@ -22,8 +23,10 @@ export default function RootLayout({
       <body className="antialiased">
         <Web3Provider>
           <SessionProvider>
-            {children}
-            <LastAgent />
+            <ChatDepositProvider>
+              {children}
+              <LastAgent />
+            </ChatDepositProvider>
           </SessionProvider>
         </Web3Provider>
       </body>

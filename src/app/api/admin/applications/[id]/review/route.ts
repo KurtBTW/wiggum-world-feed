@@ -67,8 +67,8 @@ export async function POST(
       if (application.offeringIntegration) offering.push('integration');
       if (application.offeringOther) offering.push(application.offeringOther);
 
-      await prisma.$transaction([
-        prisma.application.update({
+      await prisma.$transaction(async (tx) => {
+        await tx.application.update({
           where: { id },
           data: {
             status: 'APPROVED',
@@ -76,10 +76,11 @@ export async function POST(
             reviewedBy: session.user.id,
             reviewedAt: new Date(),
           },
-        }),
-        prisma.networkMember.create({
+        });
+        
+        await tx.networkMember.create({
           data: {
-            userId: application.userId,
+            userId: application.userId || undefined,
             applicationId: application.id,
             name: application.projectName,
             slug,
@@ -94,12 +95,15 @@ export async function POST(
             seeking,
             offering,
           },
-        }),
-        prisma.user.update({
-          where: { id: application.userId },
-          data: { role: 'MEMBER' },
-        }),
-      ]);
+        });
+
+        if (application.userId) {
+          await tx.user.update({
+            where: { id: application.userId },
+            data: { role: 'MEMBER' },
+          });
+        }
+      });
 
       return NextResponse.json({ success: true, action: 'approved' });
     }

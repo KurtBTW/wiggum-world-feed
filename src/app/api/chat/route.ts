@@ -1,4 +1,3 @@
-// POST /api/chat - Send chat message and get GPT-5.2 response
 import { NextResponse } from 'next/server';
 import { processChatMessage, explainItem, summarizeItem, getChatHistory, clearChatHistory } from '@/services/chat';
 import { z } from 'zod';
@@ -74,7 +73,6 @@ export async function POST(request: Request) {
   }
 }
 
-// GET /api/chat?sessionId=xxx - Get chat history
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

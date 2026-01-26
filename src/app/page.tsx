@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
-import { ArrowRight, Shield, Users, Zap, CheckCircle, Network, LogOut } from 'lucide-react';
+import { ArrowRight, Shield, Users, Zap, CheckCircle, Network } from 'lucide-react';
 
 const CATEGORIES = [
   { name: 'Lending', description: 'Lending and borrowing protocols' },
@@ -41,8 +40,6 @@ const PROCESS_STEPS = [
 ];
 
 export default function LandingPage() {
-  const { data: session } = useSession();
-
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       <header className="border-b border-white/[0.06]">
@@ -52,38 +49,18 @@ export default function LandingPage() {
             <span className="text-xl font-bold text-white">Last Network</span>
           </div>
           <div className="flex items-center gap-4">
-            {session ? (
-              <>
-                {session.user.role === 'ADMIN' && (
-                  <Link
-                    href="/admin"
-                    className="text-sm text-yellow-400 hover:underline"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <Link
-                  href="/status"
-                  className="text-sm text-[#50e2c3] hover:underline"
-                >
-                  My Application
-                </Link>
-                <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  className="flex items-center gap-1 text-sm text-zinc-400 hover:text-white transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="text-sm text-zinc-300 hover:text-white transition-colors"
-              >
-                Sign In
-              </Link>
-            )}
+            <Link
+              href="/network/feed"
+              className="text-sm text-zinc-300 hover:text-white transition-colors"
+            >
+              Command Center
+            </Link>
+            <Link
+              href="/network"
+              className="text-sm text-[#50e2c3] hover:underline"
+            >
+              Directory
+            </Link>
           </div>
         </div>
       </header>
@@ -105,17 +82,17 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href={session ? "/apply" : "/auth/signup"}
+                href="/network"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#50e2c3] text-black font-semibold rounded-lg hover:bg-[#3fcbac] transition-colors text-lg"
               >
-                {session ? "Start Application" : "Apply to Join"}
+                Browse Directory
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                href="#how-it-works"
+                href="/network/feed"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/[0.15] text-white rounded-lg hover:bg-white/[0.05] transition-colors text-lg"
               >
-                Learn More
+                Command Center
               </Link>
             </div>
           </div>
@@ -124,7 +101,7 @@ export default function LandingPage() {
         <section className="py-20 px-4 border-t border-white/[0.06]">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-white mb-4">Who's Building?</h2>
+              <h2 className="text-3xl font-bold text-white mb-4">Who&apos;s Building?</h2>
               <p className="text-zinc-400">Projects across the Hyperliquid ecosystem</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -148,7 +125,7 @@ export default function LandingPage() {
               <p className="text-zinc-400">From application to network membership</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {PROCESS_STEPS.map((step, i) => (
+              {PROCESS_STEPS.map((step) => (
                 <div
                   key={step.step}
                   className="relative p-6 rounded-lg bg-white/[0.02] border border-white/[0.06]"
@@ -198,10 +175,10 @@ export default function LandingPage() {
               Join the network of builders shaping DeFi on Hyperliquid.
             </p>
             <Link
-              href={session ? "/apply" : "/auth/signup"}
+              href="/network"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#50e2c3] text-black font-semibold rounded-lg hover:bg-[#3fcbac] transition-colors text-lg"
             >
-              {session ? "Start Application" : "Apply to Join"}
+              Apply to Join
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

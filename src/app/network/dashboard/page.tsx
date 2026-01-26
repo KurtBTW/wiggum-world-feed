@@ -2,11 +2,15 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useBalance, useReadContract } from 'wagmi';
-import { Wallet, TrendingUp, ArrowUpRight, Loader2 } from 'lucide-react';
+import { Wallet, TrendingUp, ArrowUpRight, Loader2, Zap, Bitcoin } from 'lucide-react';
 import { formatUnits } from 'viem';
 import { LoopingDeposit } from '@/components/LoopingDeposit';
+import { KinetiqDeposit } from '@/components/KinetiqDeposit';
+import { LiminalDeposit } from '@/components/LiminalDeposit';
 import { LOOPING_CONTRACTS } from '@/services/looping';
-import { LHYPE_TOKEN_ABI } from '@/lib/abis';
+import { KINETIQ_CONTRACTS } from '@/services/kinetiq';
+import { LIMINAL_CONTRACTS } from '@/services/liminal';
+import { LHYPE_TOKEN_ABI, KINETIQ_TOKEN_ABI, LIMINAL_SHARE_MANAGER_ABI } from '@/lib/abis';
 import { useState, useCallback } from 'react';
 
 export default function DashboardPage() {
@@ -23,9 +27,31 @@ export default function DashboardPage() {
     abi: LHYPE_TOKEN_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-    },
+    query: { enabled: !!address },
+  });
+
+  const { data: khypeBalance, isLoading: khypeLoading, refetch: refetchKhype } = useReadContract({
+    address: KINETIQ_CONTRACTS.KHYPE,
+    abi: KINETIQ_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
+  const { data: xhypeBalance, isLoading: xhypeLoading, refetch: refetchXhype } = useReadContract({
+    address: LIMINAL_CONTRACTS.xHYPE.SHARE_MANAGER,
+    abi: LIMINAL_SHARE_MANAGER_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
+  const { data: xbtcBalance, isLoading: xbtcLoading, refetch: refetchXbtc } = useReadContract({
+    address: LIMINAL_CONTRACTS.xBTC.SHARE_MANAGER,
+    abi: LIMINAL_SHARE_MANAGER_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
   });
 
   const handleDepositSuccess = useCallback(() => {
@@ -34,6 +60,9 @@ export default function DashboardPage() {
     const refetchAll = () => {
       refetchHype();
       refetchLhype();
+      refetchKhype();
+      refetchXhype();
+      refetchXbtc();
     };
     
     refetchAll();
@@ -45,11 +74,15 @@ export default function DashboardPage() {
       setRefreshKey(k => k + 1);
       setIsRefreshing(false);
     }, 15000);
-  }, [refetchHype, refetchLhype]);
+  }, [refetchHype, refetchLhype, refetchKhype, refetchXhype, refetchXbtc]);
 
-  const formattedLhype = lhypeBalance 
-    ? parseFloat(formatUnits(lhypeBalance as bigint, 18))
-    : 0;
+  const formattedLhype = lhypeBalance ? parseFloat(formatUnits(lhypeBalance as bigint, 18)) : 0;
+  const formattedKhype = khypeBalance ? parseFloat(formatUnits(khypeBalance as bigint, 18)) : 0;
+  const formattedXhype = xhypeBalance ? parseFloat(formatUnits(xhypeBalance as bigint, 18)) : 0;
+  const formattedXbtc = xbtcBalance ? parseFloat(formatUnits(xbtcBalance as bigint, 18)) : 0;
+  
+  const hasAnyPosition = formattedLhype > 0 || formattedKhype > 0 || formattedXhype > 0 || formattedXbtc > 0;
+  const positionsLoading = lhypeLoading || khypeLoading || xhypeLoading || xbtcLoading;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] p-8">
@@ -133,8 +166,12 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div>
-                <h2 className="text-xl font-semibold text-white mb-4">Deposit</h2>
-                <LoopingDeposit key={refreshKey} onSuccess={handleDepositSuccess} />
+                <h2 className="text-xl font-semibold text-white mb-4">Yield Vaults</h2>
+                <div className="space-y-3">
+                  <LoopingDeposit key={`looping-${refreshKey}`} onSuccess={handleDepositSuccess} />
+                  <KinetiqDeposit key={`kinetiq-${refreshKey}`} onSuccess={handleDepositSuccess} />
+                  <LiminalDeposit key={`liminal-${refreshKey}`} onSuccess={handleDepositSuccess} />
+                </div>
               </div>
 
               <div>
@@ -147,33 +184,99 @@ export default function DashboardPage() {
                     </div>
                   )}
                 </div>
-                {formattedLhype > 0 ? (
+                {positionsLoading ? (
                   <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50e2c3] to-[#3fcbac] flex items-center justify-center">
-                          <TrendingUp className="w-6 h-6 text-black" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">Looped HYPE</p>
-                          <p className="text-sm text-zinc-500">Looping Collective</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-white">
-                          {formattedLhype.toLocaleString(undefined, { maximumFractionDigits: 4 })} LHYPE
-                        </p>
-                        <p className="text-sm text-zinc-500">
-                          ≈ {(formattedLhype * 1.015).toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE
-                        </p>
-                      </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-zinc-500" />
+                      <span className="text-zinc-500">Loading positions...</span>
                     </div>
-                    <div className="pt-4 border-t border-white/[0.06]">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-500">Estimated APY</span>
-                        <span className="text-[#50e2c3] font-medium">~3.42%</span>
+                  </div>
+                ) : hasAnyPosition ? (
+                  <div className="space-y-3">
+                    {formattedLhype > 0 && (
+                      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#50e2c3] to-[#3fcbac] flex items-center justify-center">
+                              <TrendingUp className="w-5 h-5 text-black" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">LHYPE</p>
+                              <p className="text-xs text-zinc-500">Looping Collective</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-white">
+                              {formattedLhype.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                            </p>
+                            <p className="text-xs text-[#50e2c3]">Earning yield</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {formattedKhype > 0 && (
+                      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center">
+                              <Zap className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">kHYPE</p>
+                              <p className="text-xs text-zinc-500">Kinetiq</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-white">
+                              {formattedKhype.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                            </p>
+                            <p className="text-xs text-[#a855f7]">Earning yield</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {formattedXhype > 0 && (
+                      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f59e0b] to-[#d97706] flex items-center justify-center">
+                              <TrendingUp className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">xHYPE</p>
+                              <p className="text-xs text-zinc-500">Liminal</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-white">
+                              {formattedXhype.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                            </p>
+                            <p className="text-xs text-[#f59e0b]">Earning yield</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {formattedXbtc > 0 && (
+                      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f59e0b] to-[#d97706] flex items-center justify-center">
+                              <Bitcoin className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">xBTC</p>
+                              <p className="text-xs text-zinc-500">Liminal</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-white">
+                              {formattedXbtc.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                            </p>
+                            <p className="text-xs text-[#f59e0b]">Earning yield</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : isRefreshing ? (
                   <div className="bg-white/[0.02] border border-[#50e2c3]/20 rounded-2xl p-6">
@@ -183,7 +286,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-white">Deposit Processing</p>
-                        <p className="text-sm text-zinc-500">Your LHYPE will appear shortly...</p>
+                        <p className="text-sm text-zinc-500">Your position will appear shortly...</p>
                       </div>
                     </div>
                   </div>
@@ -192,7 +295,7 @@ export default function DashboardPage() {
                     <TrendingUp className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
                     <p className="text-zinc-400 mb-2">No positions yet</p>
                     <p className="text-zinc-600 text-sm">
-                      Deposit HYPE to start earning yield
+                      Deposit to start earning yield
                     </p>
                   </div>
                 )}
