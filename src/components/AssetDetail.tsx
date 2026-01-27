@@ -16,6 +16,7 @@ import {
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { CompactTweetCard, Tweet } from '@/components/TweetCard';
+import { NewsCard, NewsItem } from '@/components/NewsCard';
 import { LoopingDeposit } from '@/components/LoopingDeposit';
 import { KinetiqDeposit } from '@/components/KinetiqDeposit';
 import { LiminalDeposit } from '@/components/LiminalDeposit';
@@ -98,6 +99,8 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
   const [timeframe, setTimeframe] = useState<string>('1D');
   const [chartLoading, setChartLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
   
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -210,16 +213,33 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
     fetchChartData();
   }, [asset.id, asset.type, timeframe, activeTab]);
 
+  useEffect(() => {
+    if (activeTab !== 'news') return;
+
+    async function fetchNews() {
+      setNewsLoading(true);
+      try {
+        const res = await fetch(`/api/news/${asset.id}`);
+        const data = await res.json();
+        setNews(data.map((item: NewsItem) => ({
+          ...item,
+          publishedAt: new Date(item.publishedAt),
+        })));
+      } catch (error) {
+        console.error('Failed to fetch news:', error);
+        setNews([]);
+      } finally {
+        setNewsLoading(false);
+      }
+    }
+
+    fetchNews();
+  }, [asset.id, activeTab]);
+
   const handleDepositSuccess = useCallback(() => {
     setRefreshKey(k => k + 1);
     onDepositSuccess?.();
   }, [onDepositSuccess]);
-
-  const filteredTweets = tweets.filter(tweet => {
-    const searchTerms = [asset.symbol.toLowerCase(), asset.id.toLowerCase()];
-    const text = tweet.text.toLowerCase();
-    return searchTerms.some(term => text.includes(term));
-  });
 
   const isPositive = marketData ? marketData.change24h >= 0 : false;
   const hasMarketData = marketData && marketData.price > 0;
@@ -393,9 +413,13 @@ export function AssetDetail({ asset, tweets = [], onDepositSuccess }: AssetDetai
 
             {activeTab === 'news' && (
               <div className="space-y-2">
-                {filteredTweets.length > 0 ? (
-                  filteredTweets.slice(0, 10).map((tweet) => (
-                    <CompactTweetCard key={tweet.id} tweet={tweet} />
+                {newsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-[#50e2c3] animate-spin" />
+                  </div>
+                ) : news.length > 0 ? (
+                  news.map((item) => (
+                    <NewsCard key={item.id} news={item} />
                   ))
                 ) : (
                   <div className="text-center py-8">
