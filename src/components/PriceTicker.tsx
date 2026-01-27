@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { PriceChartModal } from './PriceChartModal';
 
-interface PriceData {
+export interface TickerPriceData {
   symbol: string;
   name: string;
   price: number;
   change24h: number;
   type: 'crypto' | 'commodity';
+}
+
+interface PriceTickerProps {
+  onAssetSelect?: (asset: TickerPriceData) => void;
 }
 
 function formatPrice(price: number): string {
@@ -22,7 +25,7 @@ function formatPrice(price: number): string {
   }
 }
 
-function PriceItem({ item, onClick }: { item: PriceData; onClick: () => void }) {
+function PriceItem({ item, onClick }: { item: TickerPriceData; onClick: () => void }) {
   const isPositive = item.change24h > 0;
   const isNegative = item.change24h < 0;
   
@@ -49,10 +52,9 @@ function PriceItem({ item, onClick }: { item: PriceData; onClick: () => void }) 
   );
 }
 
-export function PriceTicker() {
-  const [prices, setPrices] = useState<PriceData[]>([]);
+export function PriceTicker({ onAssetSelect }: PriceTickerProps) {
+  const [prices, setPrices] = useState<TickerPriceData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAsset, setSelectedAsset] = useState<PriceData | null>(null);
 
   useEffect(() => {
     async function fetchPrices() {
@@ -83,61 +85,55 @@ export function PriceTicker() {
   const cryptoPrices = prices.filter(p => p.type === 'crypto');
   const commodityPrices = prices.filter(p => p.type === 'commodity');
 
+  const handleClick = (item: TickerPriceData) => {
+    if (onAssetSelect) {
+      onAssetSelect(item);
+    }
+  };
+
   return (
-    <>
-      <div className="h-8 bg-black/50 border-b border-white/[0.06] overflow-hidden">
-        <div className="h-full flex items-center animate-ticker">
-          <div className="flex items-center">
-            {cryptoPrices.map((item) => (
-              <PriceItem 
-                key={item.symbol} 
-                item={item} 
-                onClick={() => setSelectedAsset(item)}
-              />
-            ))}
-            
-            <div className="w-px h-4 bg-white/[0.1] mx-2" />
-            
-            {commodityPrices.map((item) => (
-              <PriceItem 
-                key={item.symbol} 
-                item={item} 
-                onClick={() => setSelectedAsset(item)}
-              />
-            ))}
-          </div>
+    <div className="h-8 bg-black/50 border-b border-white/[0.06] overflow-hidden">
+      <div className="h-full flex items-center animate-ticker">
+        <div className="flex items-center">
+          {cryptoPrices.map((item) => (
+            <PriceItem 
+              key={item.symbol} 
+              item={item} 
+              onClick={() => handleClick(item)}
+            />
+          ))}
           
-          <div className="flex items-center ml-8">
-            {cryptoPrices.map((item) => (
-              <PriceItem 
-                key={`${item.symbol}-2`} 
-                item={item} 
-                onClick={() => setSelectedAsset(item)}
-              />
-            ))}
-            
-            <div className="w-px h-4 bg-white/[0.1] mx-2" />
-            
-            {commodityPrices.map((item) => (
-              <PriceItem 
-                key={`${item.symbol}-2`} 
-                item={item} 
-                onClick={() => setSelectedAsset(item)}
-              />
-            ))}
-          </div>
+          <div className="w-px h-4 bg-white/[0.1] mx-2" />
+          
+          {commodityPrices.map((item) => (
+            <PriceItem 
+              key={item.symbol} 
+              item={item} 
+              onClick={() => handleClick(item)}
+            />
+          ))}
+        </div>
+        
+        <div className="flex items-center ml-8">
+          {cryptoPrices.map((item) => (
+            <PriceItem 
+              key={`${item.symbol}-2`} 
+              item={item} 
+              onClick={() => handleClick(item)}
+            />
+          ))}
+          
+          <div className="w-px h-4 bg-white/[0.1] mx-2" />
+          
+          {commodityPrices.map((item) => (
+            <PriceItem 
+              key={`${item.symbol}-2`} 
+              item={item} 
+              onClick={() => handleClick(item)}
+            />
+          ))}
         </div>
       </div>
-
-      {selectedAsset && (
-        <PriceChartModal
-          symbol={selectedAsset.symbol}
-          name={selectedAsset.name}
-          currentPrice={selectedAsset.price}
-          change24h={selectedAsset.change24h}
-          onClose={() => setSelectedAsset(null)}
-        />
-      )}
-    </>
+    </div>
   );
 }

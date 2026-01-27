@@ -9,7 +9,8 @@ import {
   ChevronLeft, ChevronRight, TrendingUp, Bitcoin, Cat
 } from 'lucide-react';
 import { CompactTweetCard, Tweet } from '@/components/TweetCard';
-import { PriceTicker } from '@/components/PriceTicker';
+import { PriceTicker, TickerPriceData } from '@/components/PriceTicker';
+import { TickerAssetModal } from '@/components/TickerAssetModal';
 import { TelegramPanel } from '@/components/TelegramPanel';
 import { TelegramAuth } from '@/components/TelegramAuth';
 import { AssetDetail } from '@/components/AssetDetail';
@@ -52,6 +53,7 @@ export default function FeedPage() {
   const [lhypeTvl, setLhypeTvl] = useState<number>(0);
   
   const [selectedAsset, setSelectedAsset] = useState<string>('hype');
+  const [selectedTickerAsset, setSelectedTickerAsset] = useState<TickerPriceData | null>(null);
 
   const checkTelegramAuth = useCallback(async () => {
     try {
@@ -255,7 +257,7 @@ export default function FeedPage() {
         <ConnectButton />
       </nav>
 
-      <PriceTicker />
+      <PriceTicker onAssetSelect={setSelectedTickerAsset} />
 
       <div className="border-b border-white/[0.06] bg-[#0a0a0a] px-4 py-3">
         <div className="flex items-center gap-4">
@@ -405,6 +407,14 @@ export default function FeedPage() {
           </div>
         </aside>
       </div>
+
+      {selectedTickerAsset && (
+        <TickerAssetModal
+          asset={selectedTickerAsset}
+          tweets={tweets}
+          onClose={() => setSelectedTickerAsset(null)}
+        />
+      )}
     </div>
   );
 }
