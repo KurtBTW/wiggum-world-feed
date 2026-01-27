@@ -1,22 +1,20 @@
-const CRYPTO_SYMBOLS = [
-  { yahoo: 'BTC-USD', symbol: 'BTC', name: 'Bitcoin', coingecko: 'bitcoin' },
-  { yahoo: 'ETH-USD', symbol: 'ETH', name: 'Ethereum', coingecko: 'ethereum' },
-  { yahoo: 'SOL-USD', symbol: 'SOL', name: 'Solana', coingecko: 'solana' },
-  { yahoo: 'XRP-USD', symbol: 'XRP', name: 'XRP', coingecko: 'ripple' },
-  { yahoo: 'ADA-USD', symbol: 'ADA', name: 'Cardano', coingecko: 'cardano' },
-  { yahoo: 'AVAX-USD', symbol: 'AVAX', name: 'Avalanche', coingecko: 'avalanche-2' },
-  { yahoo: 'LINK-USD', symbol: 'LINK', name: 'Chainlink', coingecko: 'chainlink' },
-  { yahoo: 'DOT-USD', symbol: 'DOT', name: 'Polkadot', coingecko: 'polkadot' },
-  { yahoo: 'HYPE-USD', symbol: 'HYPE', name: 'Hyperliquid', coingecko: 'hyperliquid' },
-  { yahoo: 'SUI20947-USD', symbol: 'SUI', name: 'Sui', coingecko: 'sui' },
+const CRYPTO_IDS = [
+  { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+  { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+  { id: 'solana', symbol: 'SOL', name: 'Solana' },
+  { id: 'hyperliquid', symbol: 'HYPE', name: 'Hyperliquid' },
+  { id: 'ripple', symbol: 'XRP', name: 'XRP' },
+  { id: 'cardano', symbol: 'ADA', name: 'Cardano' },
+  { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche' },
+  { id: 'chainlink', symbol: 'LINK', name: 'Chainlink' },
+  { id: 'polkadot', symbol: 'DOT', name: 'Polkadot' },
+  { id: 'sui', symbol: 'SUI', name: 'Sui' },
 ];
 
 const COMMODITY_SYMBOLS = [
   { symbol: 'GC=F', display: 'XAU', name: 'Gold' },
   { symbol: 'SI=F', display: 'XAG', name: 'Silver' },
-  { symbol: 'HG=F', display: 'HG', name: 'Copper' },
   { symbol: 'CL=F', display: 'OIL', name: 'Crude Oil' },
-  { symbol: 'URA', display: 'URA', name: 'Uranium ETF' },
 ];
 
 export interface PriceData {
@@ -27,43 +25,45 @@ export interface PriceData {
   type: 'crypto' | 'commodity';
 }
 
-async function fetchCoinGeckoPrice(id: string): Promise<{ price: number; change24h: number } | null> {
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currency=usd&include_24hr_change=true`,
-      { next: { revalidate: 120 } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data[id]) return null;
-    return { price: data[id].usd, change24h: data[id].usd_24h_change || 0 };
-  } catch {
-    return null;
-  }
-}
-
 export async function fetchCryptoPrices(): Promise<PriceData[]> {
-  const results: PriceData[] = [];
-  
-  for (const crypto of CRYPTO_SYMBOLS) {
-    let quote = await fetchYahooQuote(crypto.yahoo);
+  try {
+    const ids = CRYPTO_IDS.map(c => c.id).join(',');
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+      { 
+        next: { revalidate: 60 },
+        headers: {
+          'Accept': 'application/json',
+        }
+      }
+    );
     
-    if (!quote || quote.price === 0) {
-      quote = await fetchCoinGeckoPrice(crypto.coingecko);
+    if (!res.ok) {
+      console.error('CoinGecko API error:', res.status);
+      return [];
     }
     
-    if (quote && quote.price > 0) {
-      results.push({
-        symbol: crypto.symbol,
-        name: crypto.name,
-        price: quote.price,
-        change24h: quote.change24h,
-        type: 'crypto',
-      });
+    const data = await res.json();
+    const results: PriceData[] = [];
+    
+    for (const crypto of CRYPTO_IDS) {
+      const priceData = data[crypto.id];
+      if (priceData && priceData.usd > 0) {
+        results.push({
+          symbol: crypto.symbol,
+          name: crypto.name,
+          price: priceData.usd,
+          change24h: priceData.usd_24h_change || 0,
+          type: 'crypto',
+        });
+      }
     }
+    
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch crypto prices:', error);
+    return [];
   }
-  
-  return results;
 }
 
 async function fetchYahooQuote(symbol: string): Promise<{ price: number; change24h: number } | null> {
@@ -78,7 +78,6 @@ async function fetchYahooQuote(symbol: string): Promise<{ price: number; change2
     });
     
     if (!response.ok) {
-      console.error(`Yahoo Finance error for ${symbol}:`, response.status);
       return null;
     }
     
@@ -108,8 +107,7 @@ async function fetchYahooQuote(symbol: string): Promise<{ price: number; change2
     const change24h = ((currentClose - prevClose) / prevClose) * 100;
     
     return { price, change24h };
-  } catch (error) {
-    console.error(`Failed to fetch ${symbol} from Yahoo:`, error);
+  } catch {
     return null;
   }
 }
@@ -117,18 +115,23 @@ async function fetchYahooQuote(symbol: string): Promise<{ price: number; change2
 export async function fetchCommodityPrices(): Promise<PriceData[]> {
   const results: PriceData[] = [];
   
-  for (const commodity of COMMODITY_SYMBOLS) {
+  const promises = COMMODITY_SYMBOLS.map(async (commodity) => {
     const quote = await fetchYahooQuote(commodity.symbol);
-    
     if (quote) {
-      results.push({
+      return {
         symbol: commodity.display,
         name: commodity.name,
         price: quote.price,
         change24h: quote.change24h,
-        type: 'commodity',
-      });
+        type: 'commodity' as const,
+      };
     }
+    return null;
+  });
+  
+  const settled = await Promise.all(promises);
+  for (const result of settled) {
+    if (result) results.push(result);
   }
   
   return results;
