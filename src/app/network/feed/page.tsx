@@ -173,7 +173,7 @@ export default function FeedPage() {
       color: '#a855f7',
       gradient: 'from-[#7c3aed] to-[#a855f7]',
       icon: <Zap className="w-5 h-5 text-white" />,
-      imageUrl: 'https://kinetiq.xyz/favicon.ico',
+      imageUrl: 'https://kinetiq.xyz/assets/brand/logo/kinetiq-logomark-dark.svg',
       website: 'https://kinetiq.xyz',
       twitter: '@kinetiq_xyz',
       description: 'Liquid staking protocol for HyperEVM validators. Stake HYPE and receive kHYPE while earning validator rewards.',
