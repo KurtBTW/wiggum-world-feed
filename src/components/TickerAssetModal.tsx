@@ -15,6 +15,7 @@ import {
 } from 'lightweight-charts';
 import { CompactTweetCard, Tweet } from '@/components/TweetCard';
 import { TickerPriceData } from './PriceTicker';
+import { NewsCard, NewsItem } from '@/components/NewsCard';
 
 interface MarketData {
   symbol: string;
@@ -151,6 +152,8 @@ export function TickerAssetModal({ asset, tweets = [], onClose }: TickerAssetMod
   const [activeTab, setActiveTab] = useState<'chart' | 'news' | 'info'>('chart');
   const [timeframe, setTimeframe] = useState<string>('1D');
   const [chartLoading, setChartLoading] = useState(true);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
   
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
@@ -288,11 +291,28 @@ export function TickerAssetModal({ asset, tweets = [], onClose }: TickerAssetMod
     fetchChartData();
   }, [asset.symbol, timeframe, activeTab]);
 
-  const filteredTweets = tweets.filter(tweet => {
-    const searchTerms = [asset.symbol.toLowerCase(), asset.name.toLowerCase()];
-    const text = tweet.text.toLowerCase();
-    return searchTerms.some(term => text.includes(term));
-  });
+  useEffect(() => {
+    if (activeTab !== 'news') return;
+
+    async function fetchNews() {
+      setNewsLoading(true);
+      try {
+        const res = await fetch(`/api/news/${asset.symbol}`);
+        const data = await res.json();
+        setNews(data.map((item: NewsItem) => ({
+          ...item,
+          publishedAt: new Date(item.publishedAt),
+        })));
+      } catch (error) {
+        console.error('Failed to fetch news:', error);
+        setNews([]);
+      } finally {
+        setNewsLoading(false);
+      }
+    }
+
+    fetchNews();
+  }, [asset.symbol, activeTab]);
 
   const isPositive = asset.change24h >= 0;
   const hasMarketData = marketData && marketData.price > 0;
@@ -429,9 +449,13 @@ export function TickerAssetModal({ asset, tweets = [], onClose }: TickerAssetMod
 
           {activeTab === 'news' && (
             <div className="space-y-2">
-              {filteredTweets.length > 0 ? (
-                filteredTweets.slice(0, 10).map((tweet) => (
-                  <CompactTweetCard key={tweet.id} tweet={tweet} />
+              {newsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 text-[#50e2c3] animate-spin" />
+                </div>
+              ) : news.length > 0 ? (
+                news.map((item) => (
+                  <NewsCard key={item.id} news={item} />
                 ))
               ) : (
                 <div className="text-center py-8">
