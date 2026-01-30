@@ -39,7 +39,6 @@ const SYMBOL_KEYWORDS: Record<string, string[]> = {
   OIL: ['crude oil', 'wti', 'brent', 'oil price'],
   khype: ['kinetiq', 'khype', 'liquid staking'],
   lhype: ['looping', 'lhype', 'looped hype'],
-  ktables: ['ktables', 'ely_k'],
   liminal: ['liminal', 'xhype', 'xbtc', 'delta neutral'],
   hypurrfi: ['hypurrfi', 'hypurr', 'trading vault'],
 };
