@@ -16,6 +16,7 @@ const ASSET_CONFIG: Record<string, { coingecko?: string; name: string; type: 'cr
   xhype: { name: 'Liminal xHYPE', type: 'protocol' },
   khype: { name: 'Kinetiq', type: 'protocol' },
   lhype: { name: 'Looping Collective', type: 'protocol' },
+  ktables: { name: 'ktables', type: 'protocol' },
   xbtc: { name: 'Liminal xBTC', type: 'protocol' },
 };
 

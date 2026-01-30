@@ -196,6 +196,19 @@ export default function FeedPage() {
       twitter: '@LoopingFi',
       description: 'The first Liquid Looping Token designed to maximize HYPE yield through an automated looping strategy. Deposit HYPE, stHYPE, or kHYPE to receive LHYPE.',
     },
+    {
+      id: 'ktables',
+      symbol: 'ktables',
+      name: 'ktables',
+      type: 'protocol',
+      noChart: true,
+      externalUrl: 'https://twitter.com/ely_K',
+      color: '#3b82f6',
+      gradient: 'from-[#3b82f6] to-[#2563eb]',
+      icon: <Network className="w-5 h-5 text-white" />,
+      twitter: '@ely_K',
+      description: 'ktables protocol on Hyperliquid.',
+    },
   ];
 
   const currentAsset = assets.find(a => a.id === selectedAsset) || assets[0];
